@@ -85,6 +85,9 @@ namespace Repository
         public DbSet<Category> Categories { get; set; } = default!;
         public DbSet<Permission> Permissions { get; set; } = default!;
         public DbSet<RolePermission> RolePermissions { get; set; } = default!;
+        public DbSet<Product> Products { get; set; }
+        public DbSet<Distributor> Distributors { get; set; } // Thêm DbSet cho Distributor
+        public DbSet<ProductInformation> ProductInformations { get; set; } // Thêm DbSet cho ProductInformations
 
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
