@@ -4,6 +4,9 @@
     {
         IAuditRepository Audit { get; }
         ICustomerRepository Customer { get; }
+        IProductRepository Product { get; }
+        IDistributorRepository Distributor { get; } // Thêm Distributor
+        IProductInformationRepository ProductInformation { get; } // Thêm ProductInformation
         ICategoryRepository Category { get; }
         IPermissionRepository Permission { get; }
         IRolePermissionRepository RolePermission { get; }
