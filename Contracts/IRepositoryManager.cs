@@ -8,6 +8,7 @@
         IDistributorRepository Distributor { get; } // Thêm Distributor
         IProductInformationRepository ProductInformation { get; } // Thêm ProductInformation
         ICategoryRepository Category { get; }
+        IOrderRepository Order { get; }
         IPermissionRepository Permission { get; }
         IRolePermissionRepository RolePermission { get; }
         IAccountRepository Account { get; }
