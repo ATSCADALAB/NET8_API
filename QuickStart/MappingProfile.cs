@@ -8,6 +8,7 @@ using Shared.DataTransferObjects.Authentication;
 using Shared.DataTransferObjects.Category;
 using Shared.DataTransferObjects.Customer;
 using Shared.DataTransferObjects.Distributor;
+using Shared.DataTransferObjects.Order;
 using Shared.DataTransferObjects.Permission;
 using Shared.DataTransferObjects.Product;
 using Shared.DataTransferObjects.ProductInformation;
@@ -21,6 +22,14 @@ namespace QuickStart
     {
         public MappingProfile()
         {
+            //Ánh xạ cho Order
+            CreateMap<Order, OrderDto>()
+               .ForMember(dest => dest.ProductCode, opt => opt.MapFrom(src => src.ProductInformation!.ProductCode))
+               .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.ProductInformation!.ProductName)) // Lấy thêm tên sản phẩm
+               .ForMember(dest => dest.DistributorName, opt => opt.MapFrom(src => src.Distributor!.DistributorName))
+               .ForMember(dest => dest.DistributorArea, opt => opt.MapFrom(src => src.Distributor!.Area)); // Lấy thêm khu vực của nhà phân phối
+            CreateMap<OrderForCreationDto, Order>();
+            CreateMap<OrderForUpdateDto, Order>();
             // Ánh xạ cho Product
             CreateMap<Product, ProductDto>()
                 .ForMember(dest => dest.Distributor, opt => opt.MapFrom(src => src.Distributor))
