@@ -12,6 +12,7 @@ namespace Repository
         private readonly Lazy<IProductRepository> _productRepository;
         private readonly Lazy<IDistributorRepository> _distributorRepository; // Thêm DistributorRepository
         private readonly Lazy<IProductInformationRepository> _productInformationRepository; // Thêm ProductInformationRepository
+        private readonly Lazy<IOrderRepository> _orderRepository;
         private readonly Lazy<IPermissionRepository> _permissionRepository;
         private readonly Lazy<IRolePermissionRepository> _rolePermissionRepository;
         private readonly Lazy<IAccountRepository> _accountRepository;
@@ -29,7 +30,7 @@ namespace Repository
             _rolePermissionRepository = new Lazy<IRolePermissionRepository>(() => new RolePermissionRepository(repositoryContext));
             _accountRepository = new Lazy<IAccountRepository>(() => new AccountRepository(repositoryContext));
             _auditRepository = new Lazy<IAuditRepository>(() => new AuditRepository(repositoryContext));
-
+            _orderRepository = new Lazy<IOrderRepository>(() => new OrderRepository(repositoryContext));
 
         }
 
@@ -42,7 +43,7 @@ namespace Repository
         public IRolePermissionRepository RolePermission => _rolePermissionRepository.Value;
         public IAccountRepository Account => _accountRepository.Value;
         public IAuditRepository Audit => _auditRepository.Value;
-
+        public IOrderRepository Order => _orderRepository.Value;
         public async Task SaveAsync() => await _repositoryContext.SaveChangesAsync();
     }
 }
