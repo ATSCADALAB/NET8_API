@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Service.Contracts;
 using Shared.DataTransferObjects.Order;
+using System.Text.RegularExpressions;
 namespace QuickStart.Presentation.Controllers
 {
     [Route("api/orders")]
@@ -13,35 +14,16 @@ namespace QuickStart.Presentation.Controllers
         private readonly IServiceManager _service;
 
         public OrderController(IServiceManager service) => _service = service;
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<OrderDto>>> GetOrders([FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, [FromQuery] string productInfo, [FromQuery] bool status)
-        {
-            try
-            {
-                var orders = await _service.OrderService.GetOrdersByFilters(startDate, endDate, productInfo, status);
-                if (orders == null)
-                {
-                    return NotFound("No orders found.");
-                }
-                return Ok(orders);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"Error retrieving orders: {ex.Message}");
-            }
-        }
-        // Lấy tất cả đơn hàng
         //[HttpGet]
-        //public async Task<ActionResult<IEnumerable<OrderDto>>> GetAllOrders()
+        //public async Task<ActionResult<IEnumerable<OrderDto>>> GetOrders([FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, [FromQuery] string productInfo, [FromQuery] bool status)
         //{
         //    try
         //    {
-        //        var orders = await _service.OrderService.GetAllOrdersAsync();
+        //        var orders = await _service.OrderService.GetOrdersByFilters(startDate, endDate, productInfo, status);
         //        if (orders == null)
         //        {
         //            return NotFound("No orders found.");
         //        }
-
         //        return Ok(orders);
         //    }
         //    catch (Exception ex)
@@ -49,10 +31,39 @@ namespace QuickStart.Presentation.Controllers
         //        return StatusCode(StatusCodes.Status500InternalServerError, $"Error retrieving orders: {ex.Message}");
         //    }
         //}
+        //Lấy tất cả đơn hàng
+        [HttpGet("template")]
+        public IActionResult DownloadProductInformationTemplate()
+        {
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "Order.xlsx");
+            if (!System.IO.File.Exists(filePath))
+                return NotFound("Template file not found.");
+
+            var fileBytes = System.IO.File.ReadAllBytes(filePath);
+            return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Order.xlsx");
+        }
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<OrderDto>>> GetAllOrders()
+        {
+            try
+            {
+                var orders = await _service.OrderService.GetAllOrdersAsync();
+                if (orders == null)
+                {
+                    return NotFound("No orders found.");
+                }
+
+                return Ok(orders);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"Error retrieving orders: {ex.Message}");
+            }
+        }
 
         // Lấy chi tiết một đơn hàng theo ID
         [HttpGet("{orderId}")]
-        public async Task<ActionResult<OrderDto>> GetOrderById(Guid orderId)
+        public async Task<IActionResult> GetOrderById(Guid orderId)
         {
             try
             {
@@ -144,7 +155,6 @@ namespace QuickStart.Presentation.Controllers
         }
 
 
-        // Nhập khẩu đơn hàng từ file (ví dụ từ Excel)
         [HttpPost("import")]
         public async Task<IActionResult> ImportOrders(IFormFile file)
         {
@@ -153,81 +163,112 @@ namespace QuickStart.Presentation.Controllers
 
             try
             {
-                //Lấy toàn bộ thông tin productInformation để gán dữ liệu
+                // Lấy toàn bộ thông tin productInformation và distributor để gán dữ liệu
                 var listProductInformation = await _service.ProductInformationService.GetAllProductInformationsAsync(false);
-                //Lấy toàn bộ thông tin distributor để gán dữ liệu
                 var listDistributor = await _service.DistributorService.GetAllDistributorsAsync(false);
+                var existingOrders = await _service.OrderService.GetAllOrdersAsync(); // Lấy danh sách order hiện có
+
                 using (var stream = file.OpenReadStream())
                 using (var workbook = new XLWorkbook(stream))
                 {
                     var worksheet = workbook.Worksheet(1); // Lấy sheet đầu tiên
-                    var orders = new List<OrderForCreationDto>();
+                    var ordersCreation = new List<OrderForCreationDto>();
+                    var errors = new List<string>(); // Lưu lỗi
+                    int successfulImports = 0; // Số dòng import thành công
+                    int duplicateRows = 0; // Số dòng bị trùng lặp
 
-                    // Bắt đầu đọc từ dòng 4 (bỏ qua header)
                     var currentRow = 4;
-                    // Giới hạn tối đa số dòng cần đọc, ví dụ: 1000 (tùy thuộc vào dữ liệu thực tế của bạn)
-                    int maxRows = worksheet.LastRowUsed().RowNumber(); // Xác định dòng cuối cùng được sử dụng
+                    int maxRows = worksheet.LastRowUsed().RowNumber();
+
+                    if (maxRows < 4)
+                        return BadRequest("Excel file has no data rows.");
 
                     while (currentRow <= maxRows)
                     {
-                        var productCodeCell = worksheet.Cell(currentRow, 4); // Lấy giá trị 'Mã Hàng' trong file import
-                        var distributorCell = worksheet.Cell(currentRow, 14); // Lấy giá trị 'Mã Hàng' trong file import
-                        // Kiểm tra 
-                        if (!productCodeCell.IsEmpty())
+                        var productCodeCell = worksheet.Cell(currentRow, 4); // Cột 'Mã Hàng'
+                        var distributorCell = worksheet.Cell(currentRow, 14); // Cột 'Tên Đại Lý'
+
+                        if (!productCodeCell.IsEmpty() && !distributorCell.IsEmpty())
                         {
-                            var productCode = productCodeCell.GetString();
-                            var distributorName = distributorCell.GetString();
+                            var productCode = productCodeCell.GetString()?.Trim();
+                            var distributorName = distributorCell.GetString()?.Trim();
+
                             var productInfo = listProductInformation.FirstOrDefault(x => x.ProductCode.Equals(productCode, StringComparison.OrdinalIgnoreCase));
                             var distributorInfo = listDistributor.FirstOrDefault(x => x.DistributorName.Equals(distributorName, StringComparison.OrdinalIgnoreCase));
 
-                            // Kiểm tra nếu cả hai thông tin đều không null
                             if (productInfo != null && distributorInfo != null)
                             {
+                                // Lấy và làm sạch DriverName, loại bỏ _x000D_\n và các ký tự xuống dòng
+                                var driverNameRaw = worksheet.Cell(currentRow, 12).GetString() ?? string.Empty;
+                                var driverName = driverNameRaw.Trim()
+                                    .Replace("_x000D_\n", "")
+                                    .Replace("_x000D_", "")
+                                    .Replace("\r\n", "")
+                                    .Replace("\n", "")
+                                    .Replace("\r", "")
+                                    .Replace("\t", "");
+
                                 var order = new OrderForCreationDto
                                 {
-                                    ProductInformationID = productInfo.Id, // Thông tin của sản phẩm
-                                    ExportDate = DateTime.TryParse(worksheet.Cell(currentRow, 1).GetString(), out var exportDate) ? exportDate : (DateTime?)null, // Ngày xuất hàng
-                                    Code = worksheet.Cell(currentRow, 2).GetString(), // Số phiếu XK
-                                    QuantityVehicle = int.TryParse(worksheet.Cell(currentRow, 3).GetString(), out var QtyVeh) ? QtyVeh : 0, // Số tài xe
-                                    WeightOrder = decimal.TryParse(worksheet.Cell(currentRow, 6).GetString(), out var cmtp) ? cmtp : 0, // Số Lượng Order (Kg)
-                                    UnitOrder = worksheet.Cell(currentRow, 7).GetString(), // Số lượng Order (Bao)
-                                    ManufactureDate = DateTime.TryParse(worksheet.Cell(currentRow, 8).GetString(), out var manufactureDate) ? manufactureDate : (DateTime?)null, // Ngày SX
-                                    VehicleNumber = worksheet.Cell(currentRow, 9).GetString(), // Biển số xe lấy hàng
-                                    ContainerNumber = int.TryParse(worksheet.Cell(currentRow, 10).GetString(), out var contNumber) ? contNumber : 0, // Số Cont
-                                    SealNumber = int.TryParse(worksheet.Cell(currentRow, 11).GetString(), out var sealNumber) ? sealNumber : 0, // Số Seal
-                                    DriverName = worksheet.Cell(currentRow, 12).GetString().Trim(), // Tên TX lấy hàng
-                                    DriverPhoneNumber = worksheet.Cell(currentRow, 13).GetString().Trim(), // SĐT TX lấy hàng
-                                    DistributorID = distributorInfo.Id, // Nhà Phân Phối
+                                    ProductInformationID = productInfo.Id,
+                                    ExportDate = DateTime.TryParse(worksheet.Cell(currentRow, 1).GetString(), out var exportDate) ? exportDate : (DateTime?)null,
+                                    Code = worksheet.Cell(currentRow, 2).GetString()?.Trim(),
+                                    QuantityVehicle = int.TryParse(worksheet.Cell(currentRow, 3).GetString(), out var qtyVeh) ? qtyVeh : 0,
+                                    WeightOrder = decimal.TryParse(worksheet.Cell(currentRow, 6).GetString(), out var cmtp) ? cmtp : 0,
+                                    UnitOrder = worksheet.Cell(currentRow, 7).GetString()?.Trim(),
+                                    ManufactureDate = DateTime.TryParse(worksheet.Cell(currentRow, 8).GetString(), out var manufactureDate) ? manufactureDate : (DateTime?)null,
+                                    VehicleNumber = worksheet.Cell(currentRow, 9).GetString()?.Trim(),
+                                    ContainerNumber = int.TryParse(worksheet.Cell(currentRow, 10).GetString(), out var contNumber) ? contNumber : 0,
+                                    SealNumber = int.TryParse(worksheet.Cell(currentRow, 11).GetString(), out var sealNumber) ? sealNumber : 0,
+                                    DriverName = driverName,
+                                    DriverPhoneNumber = worksheet.Cell(currentRow, 13).GetString()?.Trim(),
+                                    DistributorID = distributorInfo.Id
                                 };
 
-                                // Kiểm tra xem Order có bị trùng không
-                                bool isDuplicate = orders.Any(o =>
+                                // Kiểm tra trùng lặp với danh sách order hiện có
+                                bool isDuplicate = existingOrders.Any(o =>
                                     o.Code == order.Code &&
                                     o.ExportDate == order.ExportDate &&
-                                    o.VehicleNumber == order.VehicleNumber &&
-                                    o.ManufactureDate == order.ManufactureDate);
+                                    o.VehicleNumber == order.VehicleNumber);
 
                                 if (!isDuplicate)
                                 {
-                                    orders.Add(order); // Chỉ thêm nếu không trùng
+                                    ordersCreation.Add(order);
+                                    successfulImports++; // Tăng số dòng import thành công
                                 }
-                                //orders.Add(order); // Chỉ thêm vào danh sách nếu hợp lệ
+                                else
+                                {
+                                    duplicateRows++; // Tăng số dòng bị trùng lặp
+                                }
+                            }
+                            else
+                            {
+                                duplicateRows++;
+                                errors.Add($"Row {currentRow}: ProductCode '{productCode}' or Distributor '{distributorName}' not found.");
                             }
                         }
 
-                        // Tăng dòng hiện tại lên để kiểm tra dòng tiếp theo
                         currentRow++;
                     }
-                    var importedOrders = await _service.OrderService.ImportOrdersAsync(orders);
-                    return Ok(importedOrders);
+
+
+                    var importedOrders = await _service.OrderService.ImportOrdersAsync(ordersCreation);
+
+                    // Trả về báo cáo chi tiết
+                    var result = new
+                    {
+                        SuccessfulImports = successfulImports,
+                        DuplicateRows = duplicateRows,
+                    };
+
+                    return Ok(result);
                 }
             }
             catch (Exception ex)
             {
-                // Xử lý lỗi, ví dụ: log lỗi hoặc trả về BadRequest
                 return BadRequest($"Error importing orders: {ex.Message}");
             }
         }
-       
+
     }
 }

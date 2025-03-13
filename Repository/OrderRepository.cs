@@ -21,6 +21,7 @@ namespace Repository
             {
                 return await FindAll(trackChanges)
                 .Include(o=>o.ProductInformation)
+                .Include(o=>o.Distributor)
                 .OrderBy(o => o.CreatedDate) // Sắp xếp theo ngày tạo
                 .ToListAsync();
             }
@@ -34,12 +35,14 @@ namespace Repository
         public async Task<Order> GetOrderByIdAsync(Guid orderId, bool trackChanges)
         {
             return await FindByCondition(o => o.Id.Equals(orderId), trackChanges)
+                .Include(o => o.ProductInformation)
+                .Include(o => o.Distributor)
                 .FirstOrDefaultAsync();
         }
         // Lấy chi tiết đơn hàng theo mã đơn hàng với những đơn hàng chưa được hoàn thành
         public async Task<Order> GetOrderByOrderCodeAsync(string code, bool trackChanges)
         {
-            return await FindByCondition(o => o.Code.Equals(code) && o.Status == false, trackChanges)
+            return await FindByCondition(o => o.Code.Equals(code) && o.Status == 0, trackChanges)
                 .FirstOrDefaultAsync();
         }
 

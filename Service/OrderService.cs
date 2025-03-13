@@ -32,7 +32,7 @@ namespace Service
             _logger = logger;
             _mapper = mapper;
         }
-        public async Task<IEnumerable<OrderDto>> GetOrdersByFilters(DateTime? startDate, DateTime? endDate, string productCode,bool status)
+        public async Task<IEnumerable<OrderDto>> GetOrdersByFilters(DateTime? startDate, DateTime? endDate, string productCode,int status)
         {
             try
             {
@@ -63,13 +63,13 @@ namespace Service
 
         }
         // Lấy tất cả đơn hàng
-        public async Task<IEnumerable<OrderDto>> GetAllOrdersAsync()
+        public async Task<IEnumerable<Order>> GetAllOrdersAsync()
         {
             try
             {
                 var orders = await _repository.Order.GetOrdersAsync(trackChanges: false);
 
-                return _mapper.Map<IEnumerable<OrderDto>>(orders);
+                return orders;
             }
             catch (Exception ex)
             {
@@ -80,13 +80,13 @@ namespace Service
         
 
         // Lấy chi tiết 1 đơn hàng
-        public async Task<OrderDto> GetOrderByIdAsync(Guid orderId)
+        public async Task<Order> GetOrderByIdAsync(Guid orderId)
         {
             try
             {
                 var order = await _repository.Order.GetOrderByIdAsync(orderId, trackChanges: false);
                 
-                return _mapper.Map<OrderDto>(order);
+                return order;
             }
             catch (Exception ex)
             {

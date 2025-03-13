@@ -16,6 +16,7 @@
         IUserService UserService { get; }
         IRoleService RoleService { get; }
         IWcfService WcfService { get; }
+        IOrderLineDetailService OrderLineDetailService { get; }
 
         IOrderService OrderService { get; }
     }

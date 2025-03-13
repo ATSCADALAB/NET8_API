@@ -9,6 +9,7 @@
         IProductInformationRepository ProductInformation { get; } // Thêm ProductInformation
         ICategoryRepository Category { get; }
         IOrderRepository Order { get; }
+        IOrderLineDetailRepository OrderLineDetail { get; }
         IPermissionRepository Permission { get; }
         IRolePermissionRepository RolePermission { get; }
         IAccountRepository Account { get; }

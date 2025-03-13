@@ -9,12 +9,12 @@ namespace Service.Contracts
     public interface IOrderService
     {
         //Lọc đơn hàng theo khoảng ngày
-        Task<IEnumerable<OrderDto>> GetOrdersByFilters(DateTime? startDate, DateTime? endDate, string productCode,bool status);
+        Task<IEnumerable<OrderDto>> GetOrdersByFilters(DateTime? startDate, DateTime? endDate, string productCode,int status);
         // Lấy tất cả đơn hàng
-        Task<IEnumerable<OrderDto>> GetAllOrdersAsync();
+        Task<IEnumerable<Order>> GetAllOrdersAsync();
 
         // Lấy chi tiết 1 đơn hàng
-        Task<OrderDto> GetOrderByIdAsync(Guid orderId);
+        Task<Order> GetOrderByIdAsync(Guid orderId);
         //Lấy chi tiết đơn hàng bằng mã đơn hàng
         Task<OrderDto> GetOrderByOrderCodeAsync(string code);
 

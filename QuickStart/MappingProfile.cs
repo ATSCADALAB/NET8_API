@@ -9,6 +9,7 @@ using Shared.DataTransferObjects.Category;
 using Shared.DataTransferObjects.Customer;
 using Shared.DataTransferObjects.Distributor;
 using Shared.DataTransferObjects.Order;
+using Shared.DataTransferObjects.OrderLineDetail;
 using Shared.DataTransferObjects.Permission;
 using Shared.DataTransferObjects.Product;
 using Shared.DataTransferObjects.ProductInformation;
@@ -22,6 +23,11 @@ namespace QuickStart
     {
         public MappingProfile()
         {
+            //Ánh xạ cho Order
+            CreateMap<OrderLineDetail, OrderLineDetailDto>();
+            CreateMap<OrderLineDetailForCreationDto, OrderLineDetail>();
+            CreateMap<OrderLineDetailForUpdateDto, OrderLineDetail>();
+
             //Ánh xạ cho Order
             CreateMap<Order, OrderDto>()
                .ForMember(dest => dest.ProductCode, opt => opt.MapFrom(src => src.ProductInformation!.ProductCode))

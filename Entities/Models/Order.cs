@@ -31,7 +31,7 @@ namespace Entities.Models
         [Column(TypeName = "decimal(10,2)")]
         public decimal WeightOrder { get; set; } = 0m; // Số Lượng ( Kg )
         public DateTime ManufactureDate { get; set; } // Ngày sản xuất đơn hàng
-        public bool Status { get; set; } = false; // Trạng thái đơn hàng
+        public int Status { get; set; } // Trạng thái đơn hàng
         //
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow; // Ngày tạo đơn hàng
         public DateTime? UpdatedDate { get; set; } // Ngày cập nhật trạng thái

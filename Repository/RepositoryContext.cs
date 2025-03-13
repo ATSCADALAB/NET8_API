@@ -90,6 +90,7 @@ namespace Repository
         public DbSet<ProductInformation> ProductInformations { get; set; } // Thêm DbSet cho ProductInformations
 
         public DbSet<Order> Orders { get; set; } // Thêm DbSet cho Order
+        public DbSet<OrderLineDetail> OrderLineDetails { get; set; } // Thêm DbSet cho Order
 
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

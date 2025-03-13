@@ -30,6 +30,7 @@ namespace Service
         private readonly Lazy<IAuditService> _auditService;
         private readonly Lazy<IWcfService> _wcfService;
         private readonly Lazy<IOrderService> _orderService;
+        private readonly Lazy<IOrderLineDetailService> _orderLineDetailService;
 
 
         public ServiceManager(
@@ -60,6 +61,7 @@ namespace Service
             _wcfService = new Lazy<IWcfService>(() => new WcfService(configuration, hubContext)); // Truyền hubContext vào WcfService
 
             _orderService = new Lazy<IOrderService>(() => new OrderService(repositoryManager, logger, mapper));
+            _orderLineDetailService = new Lazy<IOrderLineDetailService>(() => new OrderLineDetailService(repositoryManager, logger, mapper));
         }
 
         public IWcfService WcfService => _wcfService.Value;
@@ -77,5 +79,6 @@ namespace Service
         public IRoleService RoleService => _roleService.Value;
         public IAuditService AuditService => _auditService.Value;
         public IOrderService OrderService => _orderService.Value;
+        public IOrderLineDetailService OrderLineDetailService => _orderLineDetailService.Value;
     }
 }
