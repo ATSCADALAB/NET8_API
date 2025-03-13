@@ -59,6 +59,7 @@ namespace QuickStart.Presentation.Controllers
                     return BadRequest("Order line detail data is null.");
 
                 var createdOrderLineDetail = await _service.OrderLineDetailService.CreateOrderLineDetailAsync(orderLineDetailDto);
+                await _service.OrderService.UpdateStatusAsync(orderLineDetailDto.OrderId, 1);
                 return null;
             }
             catch (Exception ex)

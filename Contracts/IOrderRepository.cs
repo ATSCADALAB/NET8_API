@@ -14,7 +14,8 @@ namespace Contracts
         Task<Order> GetOrderByIdAsync(Guid orderId, bool trackChanges);
         // Lấy chi tiết đơn hàng theo mã đơn hàng
         Task<Order> GetOrderByOrderCodeAsync(string code, bool trackChanges);
-
+        // Cập nhật thông tin đơn hàng
+        Task UpdateStatusAsync(Guid orderId, int newStatus);
         // Tạo đơn hàng mới
         void CreateOrder(Order order);
 
