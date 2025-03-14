@@ -1,9 +1,9 @@
 ﻿namespace Entities.Exceptions.Distributor
 {
-    public class DistributorNotFoundException : NotFoundException
+    public sealed class DistributorNotFoundException : NotFoundException
     {
-        public DistributorNotFoundException(long Product)
-            : base($"Distributor with id: {Product} doesn't exist in the database.")
+        public DistributorNotFoundException(int distributorId)
+            : base($"The distributor with id: {distributorId} doesn't exist in the database.")
         {
         }
     }

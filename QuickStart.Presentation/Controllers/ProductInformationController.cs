@@ -1,4 +1,5 @@
 ﻿using ClosedXML.Excel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using QuickStart.Presentation.ActionFilters;
@@ -7,8 +8,9 @@ using Shared.DataTransferObjects.ProductInformation;
 
 namespace QuickStart.Presentation.Controllers
 {
-    [Route("api/productInformations")]
+    [Route("api/product-informations")]
     [ApiController]
+    //[Authorize]
     public class ProductInformationController : ControllerBase
     {
         private readonly IServiceManager _service;
@@ -16,42 +18,56 @@ namespace QuickStart.Presentation.Controllers
         public ProductInformationController(IServiceManager service) => _service = service;
 
         [HttpGet]
-        public async Task<IActionResult> GetProductInformations()
+        [AuthorizePermission("ProductInformations", "View")]
+        public async Task<IActionResult> GetAllProductInformations()
         {
             var productInformations = await _service.ProductInformationService.GetAllProductInformationsAsync(trackChanges: false);
             return Ok(productInformations);
         }
 
-        [HttpGet("{id:long}", Name = "ProductInformationById")]
-        public async Task<IActionResult> GetProductInformation(long id)
+        [HttpGet("{productInformationId:int}", Name = "GetProductInformationById")]
+        [AuthorizePermission("ProductInformations", "View")]
+        public async Task<IActionResult> GetProductInformation(int productInformationId)
         {
-            var productInformation = await _service.ProductInformationService.GetProductInformationAsync(id, trackChanges: false);
+            var productInformation = await _service.ProductInformationService.GetProductInformationAsync(productInformationId, trackChanges: false);
+            return Ok(productInformation);
+        }
+
+        [HttpGet("code/{productCode}")]
+        [AuthorizePermission("ProductInformations", "View")]
+        public async Task<IActionResult> GetProductInformationByCode(string productCode)
+        {
+            var productInformation = await _service.ProductInformationService.GetProductInformationByCodeAsync(productCode, trackChanges: false);
             return Ok(productInformation);
         }
 
         [HttpPost]
         [ServiceFilter(typeof(ValidationFilterAttribute))]
+        [AuthorizePermission("ProductInformations", "Create")]
         public async Task<IActionResult> CreateProductInformation([FromBody] ProductInformationForCreationDto productInformation)
         {
             var createdProductInformation = await _service.ProductInformationService.CreateProductInformationAsync(productInformation);
-            return CreatedAtRoute("ProductInformationById", new { id = createdProductInformation.Id }, createdProductInformation);
+            return CreatedAtRoute("GetProductInformationById", new { productInformationId = createdProductInformation.Id }, createdProductInformation);
         }
 
-        [HttpDelete("{id:long}")]
-        public async Task<IActionResult> DeleteProductInformation(long id)
+        [HttpPut("{productInformationId:int}")]
+        [ServiceFilter(typeof(ValidationFilterAttribute))]
+        [AuthorizePermission("ProductInformations", "Update")]
+        public async Task<IActionResult> UpdateProductInformation(int productInformationId, [FromBody] ProductInformationForUpdateDto productInformationForUpdate)
         {
-            await _service.ProductInformationService.DeleteProductInformationAsync(id, trackChanges: false);
+            await _service.ProductInformationService.UpdateProductInformationAsync(productInformationId, productInformationForUpdate, trackChanges: true);
             return NoContent();
         }
 
-        [HttpPut("{id:long}")]
-        [ServiceFilter(typeof(ValidationFilterAttribute))]
-        public async Task<IActionResult> UpdateProductInformation(long id, [FromBody] ProductInformationForUpdateDto productInformation)
+        [HttpDelete("{productInformationId:int}")]
+        [AuthorizePermission("ProductInformations", "Delete")]
+        public async Task<IActionResult> DeleteProductInformation(int productInformationId)
         {
-            await _service.ProductInformationService.UpdateProductInformationAsync(id, productInformation, trackChanges: true);
+            await _service.ProductInformationService.DeleteProductInformationAsync(productInformationId, trackChanges: false);
             return NoContent();
         }
         [HttpPost("import")]
+        [AuthorizePermission("ProductInformations", "Create")]
         public async Task<IActionResult> ImportProductInformations(IFormFile file)
         {
             if (file == null || file.Length == 0)
@@ -62,44 +78,44 @@ namespace QuickStart.Presentation.Controllers
                 using (var stream = new MemoryStream())
                 {
                     await file.CopyToAsync(stream);
-                    using (var workbook = new XLWorkbook(stream)) // Sử dụng ClosedXML để đọc file
+                    using (var workbook = new XLWorkbook(stream))
                     {
                         var worksheet = workbook.Worksheet(1); // Lấy sheet đầu tiên
-                        var rowCount = worksheet.RowsUsed().Count();
+                        if (worksheet == null)
+                            return BadRequest("Excel file has no valid worksheet.");
 
-                        if (rowCount < 2) // Kiểm tra nếu file rỗng hoặc chỉ có tiêu đề
+                        var rowCount = worksheet.RowsUsed().Count();
+                        if (rowCount < 2)
                             return BadRequest("Excel file is empty or has no data rows.");
 
                         var productInformations = new List<ProductInformationForCreationDto>();
                         var errors = new List<string>();
                         int successCount = 0;
 
-                        // Bắt đầu từ hàng thứ 2 (hàng 1 là tiêu đề)
+                        // Đọc dữ liệu từ Excel
                         for (int row = 2; row <= rowCount; row++)
                         {
                             try
                             {
-                                // Đọc dữ liệu từ các cột
-                                var productInfo = new ProductInformationForCreationDto
+                                var product = new ProductInformationForCreationDto
                                 {
-                                    ProductCode = worksheet.Cell(row, 1).GetString()?.Trim(), // ProductCode
-                                    ProductName = worksheet.Cell(row, 2).GetString()?.Trim(), // ProductName
-                                    Unit = worksheet.Cell(row, 3).GetString()?.Trim(), // Unit
-                                    Weight = worksheet.Cell(row, 4).GetValue<decimal>(), // Weight
-                                    IsActive = true
+                                    ProductCode = worksheet.Cell(row, 1).GetString()?.Trim(), // Mã Sản Phẩm
+                                    ProductName = worksheet.Cell(row, 2).GetString()?.Trim(), // Tên Sản Phẩm
+                                    Unit = worksheet.Cell(row, 3).GetString()?.Trim(), // Đơn Vị
+                                    WeightPerUnit = worksheet.Cell(row, 4).GetValue<decimal>(), // QC (WeightPerUnit)
+                                    IsActive = true // Mặc định
                                 };
 
-                                // Validate dữ liệu
-                                if (string.IsNullOrWhiteSpace(productInfo.ProductCode))
-                                    throw new Exception("ProductCode is required.");
-                                if (string.IsNullOrWhiteSpace(productInfo.ProductName))
-                                    throw new Exception("ProductName is required.");
-                                if (string.IsNullOrWhiteSpace(productInfo.Unit))
-                                    throw new Exception("Unit is required.");
-                                if (productInfo.Weight <= 0)
-                                    throw new Exception("Weight must be a positive number.");
+                                // Kiểm tra dữ liệu bắt buộc
+                                if (string.IsNullOrWhiteSpace(product.ProductCode) ||
+                                    string.IsNullOrWhiteSpace(product.ProductName) ||
+                                    string.IsNullOrWhiteSpace(product.Unit) ||
+                                    product.WeightPerUnit < 0)
+                                {
+                                    throw new Exception("Missing or invalid required fields (ProductCode, ProductName, Unit, WeightPerUnit).");
+                                }
 
-                                productInformations.Add(productInfo);
+                                productInformations.Add(product);
                             }
                             catch (Exception ex)
                             {
@@ -110,17 +126,21 @@ namespace QuickStart.Presentation.Controllers
                         if (productInformations.Count == 0)
                             return BadRequest($"No valid product informations found:\n{string.Join("\n", errors)}");
 
-                        // Gửi danh sách thông tin sản phẩm đến service để lưu
-                        foreach (var productInfo in productInformations)
+                        const int batchSize = 100; // Xử lý theo lô 100 bản ghi
+                        for (int i = 0; i < productInformations.Count; i += batchSize)
                         {
+                            var batch = productInformations.Skip(i).Take(batchSize).ToList();
                             try
                             {
-                                await _service.ProductInformationService.CreateProductInformationAsync(productInfo);
-                                successCount++;
+                                foreach (var product in batch)
+                                {
+                                    await _service.ProductInformationService.CreateProductInformationAsync(product);
+                                    successCount++;
+                                }
                             }
                             catch (Exception ex)
                             {
-                                errors.Add($"ProductCode '{productInfo.ProductCode}': {ex.Message}");
+                                errors.Add($"Batch {i / batchSize + 1}: {ex.Message} - Inner: {ex.InnerException?.Message}");
                             }
                         }
 
@@ -139,29 +159,8 @@ namespace QuickStart.Presentation.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest($"Error importing product informations: {ex.Message}");
+                return BadRequest($"Error importing product informations: {ex.Message} - StackTrace: {ex.StackTrace}");
             }
-        }
-        [HttpGet("template")]
-        public IActionResult DownloadProductInformationTemplate()
-        {
-            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "ProductInformation.xlsx");
-            if (!System.IO.File.Exists(filePath))
-                return NotFound("Template file not found.");
-
-            var fileBytes = System.IO.File.ReadAllBytes(filePath);
-            return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ProductInformation.xlsx");
-        }
-        // GET: api/productInformations/search?name={name}
-        [HttpGet("search")]
-        public async Task<IActionResult> SearchProductInformations(string name)
-        {
-            if (string.IsNullOrEmpty(name))
-            {
-                return BadRequest("Tên tìm kiếm không được để trống.");
-            }
-            var distributors = await _service.ProductInformationService.GetDistributorsByNameAsync(name);
-            return Ok(distributors);
         }
     }
 }

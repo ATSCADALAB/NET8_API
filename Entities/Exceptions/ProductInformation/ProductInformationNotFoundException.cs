@@ -1,9 +1,9 @@
 ﻿namespace Entities.Exceptions.ProductInformation
 {
-    public class ProductInformationNotFoundException : NotFoundException
+    public sealed class ProductInformationNotFoundException : NotFoundException
     {
-        public ProductInformationNotFoundException(long Product)
-            : base($"ProductInformation with id: {Product} doesn't exist in the database.")
+        public ProductInformationNotFoundException(int productInformationId)
+            : base($"The product information with id: {productInformationId} doesn't exist in the database.")
         {
         }
     }

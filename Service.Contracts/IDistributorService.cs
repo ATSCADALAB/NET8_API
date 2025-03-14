@@ -1,16 +1,17 @@
-﻿using Shared.DataTransferObjects;
-using Shared.DataTransferObjects.Distributor;
+﻿using Shared.DataTransferObjects.Distributor;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Service.Contracts
 {
     public interface IDistributorService
     {
         Task<IEnumerable<DistributorDto>> GetAllDistributorsAsync(bool trackChanges);
-        Task<IEnumerable<DistributorDto>> GetDistributorsByNameAsync(string Name);
-        Task<DistributorDto> GetDistributorAsync(long distributorId, bool trackChanges);
+        Task<DistributorDto> GetDistributorAsync(int distributorId, bool trackChanges);
+        Task<DistributorDto> GetDistributorByCodeAsync(string distributorCode, bool trackChanges);
+        Task<IEnumerable<DistributorDto>> GetDistributorsByAreaAsync(int areaId, bool trackChanges);
         Task<DistributorDto> CreateDistributorAsync(DistributorForCreationDto distributor);
-        Task DeleteDistributorAsync(long distributorId, bool trackChanges);
-        Task UpdateDistributorAsync(long distributorId, DistributorForUpdateDto distributorForUpdate, bool trackChanges);
-        Task CreateDistributorsBatchAsync(IEnumerable<DistributorForCreationDto> distributors);
+        Task UpdateDistributorAsync(int distributorId, DistributorForUpdateDto distributorForUpdate, bool trackChanges);
+        Task DeleteDistributorAsync(int distributorId, bool trackChanges);
     }
 }

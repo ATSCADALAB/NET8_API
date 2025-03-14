@@ -2,8 +2,8 @@
 {
     public sealed class OrderNotFoundException : NotFoundException
     {
-        public OrderNotFoundException(Guid orderID)
-            : base($"The order with id: {orderID} doesn't exist in the database.")
+        public OrderNotFoundException(Guid orderId)
+            : base($"The order with id: {orderId} doesn't exist in the database.")
         {
         }
     }

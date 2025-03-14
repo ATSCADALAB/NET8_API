@@ -1,25 +1,16 @@
 ﻿using AutoMapper;
 using Contracts;
-using Entities.Exceptions.Customer;
+using Entities.Exceptions.OrderLineDetail;
 using Entities.Models;
-using MailKit.Search;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Service.Contracts;
-using Shared.DataTransferObjects;
 using Shared.DataTransferObjects.OrderLineDetail;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Service
 {
-    internal sealed class OrderLineDetailService : BaseService, IOrderLineDetailService
+    internal sealed class OrderLineDetailService : IOrderLineDetailService
     {
         private readonly IRepositoryManager _repository;
         private readonly ILoggerManager _logger;
@@ -27,105 +18,72 @@ namespace Service
 
         public OrderLineDetailService(IRepositoryManager repository, ILoggerManager logger, IMapper mapper)
         {
-
             _repository = repository;
             _logger = logger;
             _mapper = mapper;
         }
-        public async Task<IEnumerable<OrderLineDetail>> GetAllOrderLineDetailsAsync()
-        {
-            try
-            {
-                var OrderLineDetails = await _repository.OrderLineDetail.GetOrderLineDetailsAsync(trackChanges: false);
 
-                return OrderLineDetails;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error fetching OrderLineDetails: {ex.Message}");
-                return null;
-            }
+        public async Task<IEnumerable<OrderLineDetailDto>> GetAllOrderLineDetailsAsync(bool trackChanges)
+        {
+            var orderLineDetails = await _repository.OrderLineDetail.GetAllOrderLineDetailsAsync(trackChanges);
+            var orderLineDetailsDto = _mapper.Map<IEnumerable<OrderLineDetailDto>>(orderLineDetails);
+            return orderLineDetailsDto;
         }
 
-
-        // Lấy chi tiết 1 đơn hàng
-        public async Task<OrderLineDetail> GetOrderLineDetailByIdAsync(Guid OrderlId)
+        public async Task<OrderLineDetailDto> GetOrderLineDetailAsync(int orderLineDetailId, bool trackChanges)
         {
-            try
-            {
-                var OrderLineDetail = await _repository.OrderLineDetail.GetOrderLineDetailByIdAsync(OrderlId, trackChanges: false);
-
-                return OrderLineDetail;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error fetching OrderLineDetail by id: {ex.Message}");
-                return null;
-            }
-        }
-        
-        // Tạo đơn hàng
-        public async Task<OrderLineDetailDto> CreateOrderLineDetailAsync(OrderLineDetailForCreationDto OrderLineDetailForCreationDto)
-        {
-            var maxSequenceNumber = await _repository.OrderLineDetail.GetMaxSequenceNumberByLineAsync(OrderLineDetailForCreationDto.Line);
-            var orderLineDetail = new OrderLineDetail
-            {
-                OrderId = OrderLineDetailForCreationDto.OrderId,
-                Line = OrderLineDetailForCreationDto.Line,
-                SequenceNumber = maxSequenceNumber + 1 // Tăng dần
-            };
-            try
-            {
-                _logger.LogError($"Attempting to create an OrderLineDetail with data: {@OrderLineDetailForCreationDto}");
-                _repository.OrderLineDetail.CreateOrderLineDetail(orderLineDetail);
-                await _repository.SaveAsync();
-
-                _logger.LogError($"Attempting to create an OrderLineDetail with data: {@OrderLineDetailForCreationDto}");
-                return _mapper.Map<OrderLineDetailDto>(orderLineDetail);
-                ;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Attempting to create an OrderLineDetail with data: {@OrderLineDetailForCreationDto}");
-                throw new Exception("An error occurred while creating the OrderLineDetail. Please try again later.", ex);
-            }
+            var orderLineDetail = await GetOrderLineDetailAndCheckIfItExists(orderLineDetailId, trackChanges);
+            var orderLineDetailDto = _mapper.Map<OrderLineDetailDto>(orderLineDetail);
+            return orderLineDetailDto;
         }
 
-
-        // Cập nhật đơn hàng
-        public async Task<OrderLineDetailDto> UpdateOrderLineDetailAsync(Guid OrderLineDetailId, OrderLineDetailForUpdateDto OrderLineDetailForUpdateDto)
+        public async Task<IEnumerable<OrderLineDetailDto>> GetOrderLineDetailsByOrderAsync(Guid orderId, bool trackChanges)
         {
-            try
-            {
-                var OrderLineDetailEntity = await _repository.OrderLineDetail.GetOrderLineDetailByIdAsync(OrderLineDetailId, trackChanges: true);
-                if (OrderLineDetailEntity == null)
-                {
-                    return null;
-                }
+            var orderLineDetails = await _repository.OrderLineDetail.GetOrderLineDetailsByOrderIdAsync(orderId, trackChanges);
+            var orderLineDetailsDto = _mapper.Map<IEnumerable<OrderLineDetailDto>>(orderLineDetails);
+            return orderLineDetailsDto;
+        }
 
-                _mapper.Map(OrderLineDetailForUpdateDto, OrderLineDetailEntity);
-                _repository.OrderLineDetail.UpdateOrderLineDetail(OrderLineDetailEntity);
-                await _repository.SaveAsync();
-
-                return _mapper.Map<OrderLineDetailDto>(OrderLineDetailEntity);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error updating OrderLineDetail: {ex.Message}");
-                return null;
-            }
-        }       
-        public async Task DeleteOrderLineDetailAsync(Guid customerId, bool trackChanges)
+        public async Task<IEnumerable<OrderLineDetailDto>> GetOrderLineDetailsByLineAsync(int lineId, bool trackChanges)
         {
-            var OrderLineDetail = await GetOrderLineDetailAndCheckIfItExists(customerId, trackChanges);
+            var orderLineDetails = await _repository.OrderLineDetail.GetOrderLineDetailsByLineIdAsync(lineId, trackChanges);
+            var orderLineDetailsDto = _mapper.Map<IEnumerable<OrderLineDetailDto>>(orderLineDetails);
+            return orderLineDetailsDto;
+        }
 
-            _repository.OrderLineDetail.DeleteOrderLineDetail(OrderLineDetail);
+        public async Task<OrderLineDetailDto> CreateOrderLineDetailAsync(OrderLineDetailForCreationDto orderLineDetail)
+        {
+            if (orderLineDetail == null)
+                throw new ArgumentNullException(nameof(orderLineDetail), "OrderLineDetailForCreationDto cannot be null.");
+
+            var orderLineDetailEntity = _mapper.Map<OrderLineDetail>(orderLineDetail);
+            _repository.OrderLineDetail.CreateOrderLineDetail(orderLineDetailEntity);
+            await _repository.SaveAsync();
+
+            var orderLineDetailToReturn = _mapper.Map<OrderLineDetailDto>(orderLineDetailEntity);
+            return orderLineDetailToReturn;
+        }
+
+        public async Task UpdateOrderLineDetailAsync(int orderLineDetailId, OrderLineDetailForUpdateDto orderLineDetailForUpdate, bool trackChanges)
+        {
+            var orderLineDetail = await GetOrderLineDetailAndCheckIfItExists(orderLineDetailId, trackChanges);
+            _mapper.Map(orderLineDetailForUpdate, orderLineDetail);
             await _repository.SaveAsync();
         }
-        private async Task<OrderLineDetail> GetOrderLineDetailAndCheckIfItExists(Guid id, bool trackChanges)
+
+        public async Task DeleteOrderLineDetailAsync(int orderLineDetailId, bool trackChanges)
         {
-            var customer = await _repository.OrderLineDetail.GetOrderLineDetailByIdAsync(id, trackChanges);
-            return customer;
+            var orderLineDetail = await GetOrderLineDetailAndCheckIfItExists(orderLineDetailId, trackChanges);
+            _repository.OrderLineDetail.DeleteOrderLineDetail(orderLineDetail);
+            await _repository.SaveAsync();
+        }
+
+        private async Task<OrderLineDetail> GetOrderLineDetailAndCheckIfItExists(int id, bool trackChanges)
+        {
+            var orderLineDetail = await _repository.OrderLineDetail.GetOrderLineDetailByIdAsync(id, trackChanges);
+            if (orderLineDetail is null)
+                throw new OrderLineDetailNotFoundException(id);
+            return orderLineDetail;
         }
     }
 }

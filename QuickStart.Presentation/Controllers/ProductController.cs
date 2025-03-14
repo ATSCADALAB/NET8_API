@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using QuickStart.Presentation.ActionFilters;
 using Service.Contracts;
 using Shared.DataTransferObjects.Product;
@@ -7,6 +8,7 @@ namespace QuickStart.Presentation.Controllers
 {
     [Route("api/products")]
     [ApiController]
+    //[Authorize]
     public class ProductController : ControllerBase
     {
         private readonly IServiceManager _service;
@@ -14,59 +16,68 @@ namespace QuickStart.Presentation.Controllers
         public ProductController(IServiceManager service) => _service = service;
 
         [HttpGet]
-        public async Task<IActionResult> GetProducts()
+        [AuthorizePermission("Products", "View")]
+        public async Task<IActionResult> GetAllProducts()
         {
-            var products = await _service.ProductService.GetAllProductsAsync(trackChanges: true);
+            var products = await _service.ProductService.GetAllProductsAsync(trackChanges: false);
             return Ok(products);
         }
 
-        [HttpGet("{tagID}", Name = "tagID")]
-        public async Task<IActionResult> GetProduct(string tagID)
+        [HttpGet("{productId:int}", Name = "GetProductById")]
+        [AuthorizePermission("Products", "View")]
+        public async Task<IActionResult> GetProduct(int productId)
         {
-            var product = await _service.ProductService.GetProductByTagIDAsync(tagID, trackChanges: true);
-            return Ok(product);
-        }
-        [HttpGet("{id:long}", Name = "ProductById")]
-        public async Task<IActionResult> GetProduct(long id)
-        {
-            var product = await _service.ProductService.GetProductAsync(id, trackChanges: true);
+            var product = await _service.ProductService.GetProductAsync(productId, trackChanges: false);
             return Ok(product);
         }
 
-        [HttpGet("distributor/{distributorId:long}")]
-        public async Task<IActionResult> GetProductsByDistributor(long distributorId)
+        [HttpGet("tag/{tagId}")]
+        [AuthorizePermission("Products", "View")]
+        public async Task<IActionResult> GetProductByTagID(string tagId)
         {
-            var products = await _service.ProductService.GetProductsByDistributorAsync(distributorId, trackChanges: true);
+            var product = await _service.ProductService.GetProductByTagIDAsync(tagId, trackChanges: false);
+            return Ok(product);
+        }
+
+        [HttpGet("by-distributor/{distributorId:int}")]
+        [AuthorizePermission("Products", "View")]
+        public async Task<IActionResult> GetProductsByDistributor(int distributorId)
+        {
+            var products = await _service.ProductService.GetProductsByDistributorAsync(distributorId, trackChanges: false);
             return Ok(products);
         }
 
-        [HttpGet("productInformation/{productInformationId:long}")]
-        public async Task<IActionResult> GetProductsByProductInformation(long productInformationId)
+        [HttpGet("by-order-detail/{orderDetailId:int}")]
+        [AuthorizePermission("Products", "View")]
+        public async Task<IActionResult> GetProductsByOrderDetail(int orderDetailId)
         {
-            var products = await _service.ProductService.GetProductsByProductInformationAsync(productInformationId, trackChanges: true);
+            var products = await _service.ProductService.GetProductsByOrderDetailAsync(orderDetailId, trackChanges: false);
             return Ok(products);
         }
 
         [HttpPost]
         [ServiceFilter(typeof(ValidationFilterAttribute))]
+        [AuthorizePermission("Products", "Create")]
         public async Task<IActionResult> CreateProduct([FromBody] ProductForCreationDto product)
         {
             var createdProduct = await _service.ProductService.CreateProductAsync(product);
-            return CreatedAtRoute("ProductById", new { id = createdProduct.Id }, createdProduct);
+            return CreatedAtRoute("GetProductById", new { productId = createdProduct.Id }, createdProduct);
         }
 
-        [HttpDelete("{id:long}")]
-        public async Task<IActionResult> DeleteProduct(long id)
+        [HttpPut("{productId:int}")]
+        [ServiceFilter(typeof(ValidationFilterAttribute))]
+        [AuthorizePermission("Products", "Update")]
+        public async Task<IActionResult> UpdateProduct(int productId, [FromBody] ProductForUpdateDto productForUpdate)
         {
-            await _service.ProductService.DeleteProductAsync(id, trackChanges: true);
+            await _service.ProductService.UpdateProductAsync(productId, productForUpdate, trackChanges: true);
             return NoContent();
         }
 
-        [HttpPut("{id:long}")]
-        [ServiceFilter(typeof(ValidationFilterAttribute))]
-        public async Task<IActionResult> UpdateProduct(long id, [FromBody] ProductForUpdateDto product)
+        [HttpDelete("{productId:int}")]
+        [AuthorizePermission("Products", "Delete")]
+        public async Task<IActionResult> DeleteProduct(int productId)
         {
-            await _service.ProductService.UpdateProductAsync(id, product, trackChanges: true);
+            await _service.ProductService.DeleteProductAsync(productId, trackChanges: false);
             return NoContent();
         }
     }

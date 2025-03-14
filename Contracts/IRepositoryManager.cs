@@ -1,18 +1,26 @@
-﻿namespace Contracts
+﻿using System.Threading.Tasks;
+
+namespace Contracts
 {
     public interface IRepositoryManager
     {
+        IAreaRepository Area { get; } // Thêm cho Areas
+        ILineRepository Line { get; } // Thêm cho Lines
+        IDistributorRepository Distributor { get; } // Đã có trong yêu cầu của bạn
+        IProductInformationRepository ProductInformation { get; } // Đã có trong yêu cầu của bạn
+        IOrderRepository Order { get; } // Đã có trong yêu cầu của bạn
+        IOrderDetailRepository OrderDetail { get; } // Thêm cho OrderDetails
+        IOrderLineDetailRepository OrderLineDetail { get; } // Đã có trong yêu cầu của bạn
+        ISensorRecordRepository SensorRecord { get; } // Thêm cho SensorRecords
+        IProductRepository Product { get; } // Đã có trong yêu cầu của bạn
+        IStockRepository Stock { get; } // Thêm cho Stock
+        IInboundRecordRepository InboundRecord { get; } // Thêm cho InboundRecords
+
         IAuditRepository Audit { get; }
-        ICustomerRepository Customer { get; }
-        IProductRepository Product { get; }
-        IDistributorRepository Distributor { get; } // Thêm Distributor
-        IProductInformationRepository ProductInformation { get; } // Thêm ProductInformation
         ICategoryRepository Category { get; }
-        IOrderRepository Order { get; }
-        IOrderLineDetailRepository OrderLineDetail { get; }
         IPermissionRepository Permission { get; }
         IRolePermissionRepository RolePermission { get; }
-        IAccountRepository Account { get; }
+
         Task SaveAsync();
     }
 }

@@ -21,6 +21,8 @@ namespace QuickStart.Presentation.ActionFilters
 
         public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
         {
+            var authHeader = context.HttpContext.Request.Headers["Authorization"];
+            Console.WriteLine($"Authorization Header: {authHeader}");
             // Lấy userId từ Claims
             var userId = context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 

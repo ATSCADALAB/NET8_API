@@ -3,7 +3,6 @@ using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Repository
@@ -14,50 +13,37 @@ namespace Repository
         {
         }
 
-        // Lấy tất cả đơn hàng
-        public async Task<IEnumerable<OrderLineDetail>> GetOrderLineDetailsAsync(bool trackChanges)
-        {
-            try
-            {
-                return await FindAll(trackChanges)
-                .Include(o=>o.Order)
+        public async Task<IEnumerable<OrderLineDetail>> GetAllOrderLineDetailsAsync(bool trackChanges) =>
+            await FindAll(trackChanges)
+                .Include(old => old.Order)
+                .Include(old => old.Line)
+                .OrderBy(old => old.SequenceNumber)
                 .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error", ex);
-            }
-        }
-        // Lấy SequenceNumber lớn nhất theo Line
-        public async Task<int> GetMaxSequenceNumberByLineAsync(int line)
-        {
-            return await FindByCondition(o => o.Line == line, trackChanges: false)
-                .MaxAsync(o => (int?)o.SequenceNumber) ?? 0;
-        }
-        // Lấy chi tiết đơn hàng theo ID
-        public async Task<OrderLineDetail> GetOrderLineDetailByIdAsync(Guid OrderLineDetailId, bool trackChanges)
-        {
-            return await FindByCondition(o => o.OrderId.Equals(OrderLineDetailId), trackChanges)
-                .Include(o => o.Order)
-                .FirstOrDefaultAsync();
-        }
-        // Tạo đơn hàng mới
-        public void CreateOrderLineDetail(OrderLineDetail OrderLineDetail)
-        {
 
-            Create(OrderLineDetail);
-        }
+        public async Task<OrderLineDetail> GetOrderLineDetailByIdAsync(int orderLineDetailId, bool trackChanges) =>
+            await FindByCondition(old => old.Id == orderLineDetailId, trackChanges)
+                .Include(old => old.Order)
+                .Include(old => old.Line)
+                .SingleOrDefaultAsync();
 
-        // Cập nhật đơn hàng
-        public void UpdateOrderLineDetail(OrderLineDetail OrderLineDetail)
-        {
-            Update(OrderLineDetail);
-        }
+        public async Task<IEnumerable<OrderLineDetail>> GetOrderLineDetailsByOrderIdAsync(Guid orderId, bool trackChanges) =>
+            await FindByCondition(old => old.OrderId == orderId, trackChanges)
+                .Include(old => old.Order)
+                .Include(old => old.Line)
+                .OrderBy(old => old.SequenceNumber)
+                .ToListAsync();
 
-        // Xóa đơn hàng
-        public void DeleteOrderLineDetail(OrderLineDetail OrderLineDetail)
-        {
-            Delete(OrderLineDetail);
-        }
+        public async Task<IEnumerable<OrderLineDetail>> GetOrderLineDetailsByLineIdAsync(int lineId, bool trackChanges) =>
+            await FindByCondition(old => old.LineId == lineId, trackChanges)
+                .Include(old => old.Order)
+                .Include(old => old.Line)
+                .OrderBy(old => old.SequenceNumber)
+                .ToListAsync();
+
+        public void CreateOrderLineDetail(OrderLineDetail orderLineDetail) => Create(orderLineDetail);
+
+        public void UpdateOrderLineDetail(OrderLineDetail orderLineDetail) => Update(orderLineDetail);
+
+        public void DeleteOrderLineDetail(OrderLineDetail orderLineDetail) => Delete(orderLineDetail);
     }
 }

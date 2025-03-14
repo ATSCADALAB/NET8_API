@@ -1,25 +1,16 @@
 ﻿using AutoMapper;
 using Contracts;
-using Entities.Exceptions.Customer;
 using Entities.Exceptions.Order;
 using Entities.Models;
-using MailKit.Search;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Service.Contracts;
 using Shared.DataTransferObjects.Order;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Service
 {
-    internal sealed class OrderService : BaseService, IOrderService
+    internal sealed class OrderService : IOrderService
     {
         private readonly IRepositoryManager _repository;
         private readonly ILoggerManager _logger;
@@ -27,207 +18,82 @@ namespace Service
 
         public OrderService(IRepositoryManager repository, ILoggerManager logger, IMapper mapper)
         {
-
             _repository = repository;
             _logger = logger;
             _mapper = mapper;
         }
-        public async Task<IEnumerable<OrderDto>> GetOrdersByFilters(DateTime? startDate, DateTime? endDate, string productCode,int status)
+
+        public async Task<IEnumerable<OrderDto>> GetAllOrdersAsync(bool trackChanges)
         {
-            try
-            {
-                var orders = await _repository.Order.GetOrdersAsync(trackChanges: false);
-
-                //// Lọc theo product code
-                //if (productCode.IsNullOrEmpty())
-                //{
-                //    orders = orders.Where(o => o.LineID == lineID);
-                //}
-                // Lọc theo Status
-                if(status != null)
-                {
-                    orders = orders.Where(o => o.Status == status);
-                }
-                
-                // Chuyển IQueryable sang List trước khi áp dụng bộ lọc
-                var filteredOrders = GetItemsByDateRangeAsync<Order>(orders.AsQueryable(), startDate, endDate);
-                
-
-                return _mapper.Map<IEnumerable<OrderDto>>(filteredOrders.ToList());
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error fetching orders: {ex.Message}");
-                return null;
-            }
-
-        }
-        // Lấy tất cả đơn hàng
-        public async Task<IEnumerable<Order>> GetAllOrdersAsync()
-        {
-            try
-            {
-                var orders = await _repository.Order.GetOrdersAsync(trackChanges: false);
-
-                return orders;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error fetching orders: {ex.Message}");
-                return null;
-            }
-        }
-        
-
-        // Lấy chi tiết 1 đơn hàng
-        public async Task<Order> GetOrderByIdAsync(Guid orderId)
-        {
-            try
-            {
-                var order = await _repository.Order.GetOrderByIdAsync(orderId, trackChanges: false);
-                
-                return order;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error fetching order by id: {ex.Message}");
-                return null;
-            }
-        }
-        // Lấy chi tiết 1 đơn hàng theo mã đơn hàng
-        public async Task<OrderDto> GetOrderByOrderCodeAsync(string code)
-        {
-            try
-            {
-                var order = await _repository.Order.GetOrderByOrderCodeAsync(code, trackChanges: false);
-                
-                return _mapper.Map<OrderDto>(order);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error fetching order by id: {ex.Message}");
-                return null;
-            }
+            var orders = await _repository.Order.GetAllOrdersAsync(trackChanges);
+            var ordersDto = _mapper.Map<IEnumerable<OrderDto>>(orders);
+            return ordersDto;
         }
 
-        // Tạo đơn hàng
-        public async Task<OrderDto> CreateOrderAsync(OrderForCreationDto orderForCreationDto)
+        public async Task<OrderDto> GetOrderAsync(Guid orderId, bool trackChanges)
         {
-            if (orderForCreationDto == null)
-            {
-                throw new ArgumentNullException(nameof(orderForCreationDto), "Order data must not be null.");
-            }
-
-            try
-            {
-                _logger.LogError($"Attempting to create an order with data: {@orderForCreationDto}");
-
-                var orderEntity = _mapper.Map<Order>(orderForCreationDto);
-
-                // Kiểm tra các trường string trong orderEntity và gán giá trị rỗng nếu null
-                foreach (var property in typeof(Order).GetProperties())
-                {
-                    if (property.PropertyType == typeof(string))
-                    {
-                        var value = property.GetValue(orderEntity) as string;
-                        if (value == null)
-                        {
-                            property.SetValue(orderEntity, string.Empty);
-                        }
-                    }
-                }
-
-                _repository.Order.CreateOrder(orderEntity);
-                await _repository.SaveAsync();
-
-                var orderToReturn = _mapper.Map<OrderDto>(orderEntity);
-
-                _logger.LogError($"Attempting to create an order with data: {@orderForCreationDto}");
-                return orderToReturn;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Attempting to create an order with data: {@orderForCreationDto}");
-                throw new Exception("An error occurred while creating the order. Please try again later.", ex);
-            }
+            var order = await GetOrderAndCheckIfItExists(orderId, trackChanges);
+            var orderDto = _mapper.Map<OrderDto>(order);
+            return orderDto;
         }
 
-
-        // Cập nhật đơn hàng
-        public async Task<OrderDto> UpdateOrderAsync(Guid orderId, OrderForUpdateDto orderForUpdateDto)
+        public async Task<OrderDto> GetOrderByCodeAsync(string orderCode, bool trackChanges)
         {
-            try
-            {
-                var orderEntity = await _repository.Order.GetOrderByIdAsync(orderId, trackChanges: true);
-                if (orderEntity == null)
-                {
-                    return null;
-                }
+            var order = await _repository.Order.GetOrderByCodeAsync(orderCode, trackChanges);
+            if (order is null)
+                throw new OrderNotFoundException(Guid.Empty); // Guid không quan trọng vì dùng Code
 
-                _mapper.Map(orderForUpdateDto, orderEntity);
-                _repository.Order.UpdateOrder(orderEntity);
-                await _repository.SaveAsync();
-
-                return _mapper.Map<OrderDto>(orderEntity);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error updating order: {ex.Message}");
-                return null;
-            }
+            var orderDto = _mapper.Map<OrderDto>(order);
+            return orderDto;
         }
 
-        // Nhập khẩu (import) đơn hàng từ file hoặc nguồn bên ngoài
-        public async Task<IEnumerable<OrderDto>> ImportOrdersAsync(List<OrderForCreationDto> orders)
+        public async Task<IEnumerable<OrderDto>> GetOrdersByDistributorAsync(int distributorId, bool trackChanges)
         {
-            try
-            {
-                var orderEntities = _mapper.Map<IEnumerable<Order>>(orders);
-
-                foreach (var order in orderEntities)
-                {
-                    // Lấy thông tin Distributor từ DB
-                    var distributor = await _repository.Distributor.GetDistributorAsync(order.DistributorID, trackChanges: true);
-                    if (distributor != null)
-                    {
-                        order.Distributor = distributor;
-                    }
-
-                    // Lấy thông tin ProductInfo từ DB
-                    var product = await _repository.ProductInformation.GetProductInformationAsync(order.ProductInformationID, trackChanges: true);
-                    if (product != null)
-                    {
-                        order.ProductInformation = product;
-                    }
-
-                    _repository.Order.CreateOrder(order);
-                }
-
-                await _repository.SaveAsync();
-
-                return _mapper.Map<IEnumerable<OrderDto>>(orderEntities);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error importing orders: {ex.Message}");
-                return null;
-            }
+            var orders = await _repository.Order.GetOrdersByDistributorAsync(distributorId, trackChanges);
+            var ordersDto = _mapper.Map<IEnumerable<OrderDto>>(orders);
+            return ordersDto;
         }
 
-        public async Task DeleteOrderAsync(Guid customerId, bool trackChanges)
+        public async Task<IEnumerable<OrderDto>> GetOrdersByExportDateAsync(DateTime exportDate, bool trackChanges)
         {
-            var order = await GetOrderAndCheckIfItExists(customerId, trackChanges);
+            var orders = await _repository.Order.GetOrdersByExportDateAsync(exportDate, trackChanges);
+            var ordersDto = _mapper.Map<IEnumerable<OrderDto>>(orders);
+            return ordersDto;
+        }
 
+        public async Task<OrderDto> CreateOrderAsync(OrderForCreationDto order)
+        {
+            if (order == null)
+                throw new ArgumentNullException(nameof(order), "OrderForCreationDto cannot be null.");
+
+            var orderEntity = _mapper.Map<Order>(order);
+            _repository.Order.CreateOrder(orderEntity);
+            await _repository.SaveAsync();
+
+            var orderToReturn = _mapper.Map<OrderDto>(orderEntity);
+            return orderToReturn;
+        }
+
+        public async Task UpdateOrderAsync(Guid orderId, OrderForUpdateDto orderForUpdate, bool trackChanges)
+        {
+            var order = await GetOrderAndCheckIfItExists(orderId, trackChanges);
+            _mapper.Map(orderForUpdate, order);
+            await _repository.SaveAsync();
+        }
+
+        public async Task DeleteOrderAsync(Guid orderId, bool trackChanges)
+        {
+            var order = await GetOrderAndCheckIfItExists(orderId, trackChanges);
             _repository.Order.DeleteOrder(order);
             await _repository.SaveAsync();
         }
+
         private async Task<Order> GetOrderAndCheckIfItExists(Guid id, bool trackChanges)
         {
-            var customer = await _repository.Order.GetOrderByIdAsync(id, trackChanges);
-            if (customer is null)
+            var order = await _repository.Order.GetOrderByIdAsync(id, trackChanges);
+            if (order is null)
                 throw new OrderNotFoundException(id);
-
-            return customer;
+            return order;
         }
     }
 }

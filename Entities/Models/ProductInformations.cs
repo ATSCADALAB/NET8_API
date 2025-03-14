@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -7,12 +8,12 @@ using Microsoft.EntityFrameworkCore;
 namespace Entities.Models
 {
     [Table("ProductInformations")]
-    [Index(nameof(ProductCode), IsUnique = true)]
+    [Index(nameof(ProductCode), IsUnique = true)] // Đảm bảo ProductCode duy nhất
     public class ProductInformation
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public long Id { get; set; }
+        public int Id { get; set; }
 
         [Required]
         [StringLength(50, MinimumLength = 1)]
@@ -28,7 +29,7 @@ namespace Entities.Models
 
         [Required]
         [Column(TypeName = "decimal(10,2)")]
-        public decimal Weight { get; set; } = 0m; // Đổi từ SpecificationInKg thành Weight
+        public decimal WeightPerUnit { get; set; } = 0m;
 
         public bool IsActive { get; set; } = true;
 
@@ -36,7 +37,16 @@ namespace Entities.Models
 
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+        // Mối quan hệ với OrderDetail (one-to-many)
+        public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
+
         // Mối quan hệ với Product (one-to-many)
         public virtual ICollection<Product> Products { get; set; } = new List<Product>();
+
+        // Mối quan hệ với Stock (one-to-one)
+        public virtual Stock Stock { get; set; }
+
+        // Mối quan hệ với InboundRecord (one-to-many)
+        public virtual ICollection<InboundRecord> InboundRecords { get; set; } = new List<InboundRecord>();
     }
 }

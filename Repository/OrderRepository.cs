@@ -3,7 +3,6 @@ using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Repository
@@ -14,54 +13,38 @@ namespace Repository
         {
         }
 
-        // Lấy tất cả đơn hàng
-        public async Task<IEnumerable<Order>> GetOrdersAsync(bool trackChanges)
-        {
-            try
-            {
-                return await FindAll(trackChanges)
-                .Include(o=>o.ProductInformation)
-                .Include(o=>o.Distributor)
-                .OrderBy(o => o.CreatedDate) // Sắp xếp theo ngày tạo
-                .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error", ex);
-            }
-        }
-
-        // Lấy chi tiết đơn hàng theo ID
-        public async Task<Order> GetOrderByIdAsync(Guid orderId, bool trackChanges)
-        {
-            return await FindByCondition(o => o.Id.Equals(orderId), trackChanges)
-                .Include(o => o.ProductInformation)
+        public async Task<IEnumerable<Order>> GetAllOrdersAsync(bool trackChanges) =>
+            await FindAll(trackChanges)
+                .OrderBy(o => o.OrderCode)
                 .Include(o => o.Distributor)
-                .FirstOrDefaultAsync();
-        }
-        // Lấy chi tiết đơn hàng theo mã đơn hàng với những đơn hàng chưa được hoàn thành
-        public async Task<Order> GetOrderByOrderCodeAsync(string code, bool trackChanges)
-        {
-            return await FindByCondition(o => o.Code.Equals(code) && o.Status == 0, trackChanges)
-                .FirstOrDefaultAsync();
-        }
+                .ToListAsync();
 
-        // Tạo đơn hàng mới
-        public void CreateOrder(Order order)
-        {
-            Create(order);
-        }
+        public async Task<Order> GetOrderByIdAsync(Guid orderId, bool trackChanges) =>
+            await FindByCondition(o => o.Id == orderId, trackChanges)
+                .Include(o => o.Distributor)
+                .SingleOrDefaultAsync();
 
-        // Cập nhật đơn hàng
-        public void UpdateOrder(Order order)
-        {
-            Update(order);
-        }
+        public async Task<Order> GetOrderByCodeAsync(string orderCode, bool trackChanges) =>
+            await FindByCondition(o => o.OrderCode == orderCode, trackChanges)
+                .Include(o => o.Distributor)
+                .SingleOrDefaultAsync();
 
-        // Xóa đơn hàng
-        public void DeleteOrder(Order order)
-        {
-            Delete(order);
-        }
+        public async Task<IEnumerable<Order>> GetOrdersByDistributorAsync(int distributorId, bool trackChanges) =>
+            await FindByCondition(o => o.DistributorId == distributorId, trackChanges)
+                .Include(o => o.Distributor)
+                .OrderBy(o => o.OrderCode)
+                .ToListAsync();
+
+        public async Task<IEnumerable<Order>> GetOrdersByExportDateAsync(DateTime exportDate, bool trackChanges) =>
+            await FindByCondition(o => o.ExportDate.Date == exportDate.Date, trackChanges)
+                .Include(o => o.Distributor)
+                .OrderBy(o => o.OrderCode)
+                .ToListAsync();
+
+        public void CreateOrder(Order order) => Create(order);
+
+        public void UpdateOrder(Order order) => Update(order);
+
+        public void DeleteOrder(Order order) => Delete(order);
     }
 }

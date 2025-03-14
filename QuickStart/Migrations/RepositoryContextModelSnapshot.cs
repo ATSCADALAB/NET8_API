@@ -90,53 +90,72 @@ namespace QuickStart.Migrations
                         .HasDatabaseName("UserNameIndex");
 
                     b.ToTable("Users", (string)null);
-                });
-
-            modelBuilder.Entity("Entities.Models.Account", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)")
-                        .HasColumnName("AccountId");
-
-                    b.Property<string>("AccountType")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<Guid>("CustomerId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<DateTime>("DateCreated")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CustomerId");
-
-                    b.ToTable("Accounts");
 
                     b.HasData(
                         new
                         {
-                            Id = new Guid("80abbca8-664d-4b20-b5de-024705497d4a"),
-                            AccountType = "Domestic",
-                            CustomerId = new Guid("c9d4c053-49b6-410c-bc78-2d54a9991870"),
-                            DateCreated = new DateTime(2015, 10, 13, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                            Id = "dbeb0889-5348-489e-a611-ec710841d0fa",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "9a71e9a6-337c-4b2b-85fc-777d98b0644c",
+                            Email = "admin001@matech.com",
+                            EmailConfirmed = false,
+                            FirstName = "AdminFirstName",
+                            LastName = "AdminLastName",
+                            LockoutEnabled = false,
+                            PasswordHash = "AQAAAAIAAYagAAAAEKJVYwcpG/7RfQD1tsrpvDZ57DSmYTiIJW2Nb5LmAVjuybSecD1IH+e54vDqpWr0oQ==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "4583f5f8-a8fd-4458-b399-76c7242d254e",
+                            TwoFactorEnabled = false,
+                            UserName = "admin001"
                         },
                         new
                         {
-                            Id = new Guid("86dba8c0-d178-41e7-938c-ed49778fb52a"),
-                            AccountType = "Savings",
-                            CustomerId = new Guid("c9d4c053-49b6-410c-bc78-2d54a9991870"),
-                            DateCreated = new DateTime(2015, 9, 11, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            Id = new Guid("021ca3c1-0deb-4afd-ae94-2159a8479811"),
-                            AccountType = "Foreign",
-                            CustomerId = new Guid("3d490a70-94ce-4d15-9494-5248280c2ce3"),
-                            DateCreated = new DateTime(2022, 7, 22, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                            Id = "92db8399-e34b-4bda-9e95-21cdc39c11fa",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "c991e4d0-b6c1-439c-9718-a5544257e5ee",
+                            Email = "user002@matech.com",
+                            EmailConfirmed = false,
+                            FirstName = "UserFirstName",
+                            LastName = "UserLastName",
+                            LockoutEnabled = false,
+                            PasswordHash = "AQAAAAIAAYagAAAAEABXbthPhGxmiNewiDD8D1UzqHrcEEpeEf+SijEJRI9YFW0tfwZBOQT0PNBzsV2osA==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "e640b02a-ab5e-4379-99f9-7fd6459b6a47",
+                            TwoFactorEnabled = false,
+                            UserName = "user002"
                         });
+                });
+
+            modelBuilder.Entity("Entities.Models.Area", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AreaCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("AreaName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AreaCode")
+                        .IsUnique();
+
+                    b.ToTable("Areas");
                 });
 
             modelBuilder.Entity("Entities.Models.AuditLog", b =>
@@ -184,83 +203,21 @@ namespace QuickStart.Migrations
                     b.ToTable("Categories");
                 });
 
-            modelBuilder.Entity("Entities.Models.Customer", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)")
-                        .HasColumnName("CustomerId");
-
-                    b.Property<string>("Address")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
-
-                    b.Property<string>("Country")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("DateOfBirth")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasMaxLength(60)
-                        .HasColumnType("varchar(60)");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<bool>("status")
-                        .HasColumnType("tinyint(1)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Customers");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("c9d4c053-49b6-410c-bc78-2d54a9991870"),
-                            Address = "583 Wall Dr. Gwynn Oak, MD 21207",
-                            DateOfBirth = new DateTime(1995, 3, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FirstName = "Njabulo",
-                            LastName = "Mamba",
-                            status = true
-                        },
-                        new
-                        {
-                            Id = new Guid("3d490a70-94ce-4d15-9494-5248280c2ce3"),
-                            Address = "312 Forest Avenue, BF 923",
-                            DateOfBirth = new DateTime(1997, 11, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FirstName = "Mfuneko",
-                            LastName = "Maziya",
-                            status = true
-                        });
-                });
-
             modelBuilder.Entity("Entities.Models.Distributor", b =>
                 {
-                    b.Property<long>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("int");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Address")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("varchar(200)");
 
-                    b.Property<string>("Area")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<string>("ContactSource")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
+                    b.Property<int>("AreaId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
@@ -278,11 +235,6 @@ namespace QuickStart.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<string>("Note")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("varchar(500)");
-
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -293,113 +245,201 @@ namespace QuickStart.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AreaId");
+
                     b.HasIndex("DistributorCode")
                         .IsUnique();
 
                     b.ToTable("Distributors");
                 });
 
-            modelBuilder.Entity("Entities.Models.Order", b =>
+            modelBuilder.Entity("Entities.Models.InboundRecord", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)")
-                        .HasColumnName("OrderID");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("ContainerNumber")
                         .HasColumnType("int");
 
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("longtext");
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<long>("DistributorID")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("DriverName")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("DriverPhoneNumber")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("ExportDate")
+                    b.Property<DateTime>("InboundDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<DateTime>("ManufactureDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<long>("ProductInformationID")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("QuantityVehicle")
+                    b.Property<int>("ProductInformationId")
                         .HasColumnType("int");
 
-                    b.Property<int>("SealNumber")
+                    b.Property<int>("QuantityUnits")
                         .HasColumnType("int");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UnitOrder")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("varchar(20)");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("VehicleNumber")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<decimal>("WeightOrder")
+                    b.Property<decimal>("QuantityWeight")
                         .HasColumnType("decimal(10,2)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DistributorID");
+                    b.HasIndex("ProductInformationId");
 
-                    b.HasIndex("ProductInformationID");
+                    b.ToTable("InboundRecords");
+                });
+
+            modelBuilder.Entity("Entities.Models.Line", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("LineName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<int>("LineNumber")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LineNumber")
+                        .IsUnique();
+
+                    b.ToTable("Lines");
+                });
+
+            modelBuilder.Entity("Entities.Models.Order", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("DistributorId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DriverName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("DriverPhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<DateTime>("ExportDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("OrderCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("VehicleNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DistributorId");
 
                     b.ToTable("Orders");
                 });
 
-            modelBuilder.Entity("Entities.Models.OrderLineDetail", b =>
+            modelBuilder.Entity("Entities.Models.OrderDetail", b =>
                 {
-                    b.Property<long>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("int");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime(6)");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlComputedColumn(b.Property<DateTime>("CreatedAt"));
+                    b.Property<int>("DefectiveUnits")
+                        .HasColumnType("int");
 
-                    b.Property<int>("Line")
+                    b.Property<decimal>("DefectiveWeight")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<DateTime>("ManufactureDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("ProductInformationId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReplacedUnits")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("ReplacedWeight")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int>("RequestedUnits")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("RequestedWeight")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("ProductInformationId");
+
+                    b.ToTable("OrderDetails");
+                });
+
+            modelBuilder.Entity("Entities.Models.OrderLineDetail", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("EndTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("LineId")
                         .HasColumnType("int");
 
                     b.Property<Guid>("OrderId")
-                        .HasMaxLength(36)
                         .HasColumnType("char(36)");
 
                     b.Property<int>("SequenceNumber")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("datetime(6)");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("LineId");
 
                     b.HasIndex("OrderId");
 
@@ -425,39 +465,32 @@ namespace QuickStart.Migrations
 
             modelBuilder.Entity("Entities.Models.Product", b =>
                 {
-                    b.Property<long>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("int");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("Delivery")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)");
-
-                    b.Property<long>("DistributorId")
-                        .HasColumnType("bigint");
+                    b.Property<int>("DistributorId")
+                        .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<DateTime>("ProductDate")
+                    b.Property<DateTime>("ManufactureDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<long>("ProductInformationId")
-                        .HasColumnType("bigint");
+                    b.Property<int>("OrderDetailId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ProductInformationId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("ShipmentDate")
                         .HasColumnType("datetime(6)");
-
-                    b.Property<string>("StockOut")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)");
 
                     b.Property<string>("TagID")
                         .IsRequired()
@@ -471,9 +504,11 @@ namespace QuickStart.Migrations
 
                     b.HasIndex("DistributorId");
 
+                    b.HasIndex("OrderDetailId");
+
                     b.HasIndex("ProductInformationId");
 
-                    b.HasIndex(new[] { "TagID" }, "IX_Products_TagID")
+                    b.HasIndex("TagID")
                         .IsUnique();
 
                     b.ToTable("Products");
@@ -481,11 +516,11 @@ namespace QuickStart.Migrations
 
             modelBuilder.Entity("Entities.Models.ProductInformation", b =>
                 {
-                    b.Property<long>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("int");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
@@ -511,7 +546,7 @@ namespace QuickStart.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<decimal>("Weight")
+                    b.Property<decimal>("WeightPerUnit")
                         .HasColumnType("decimal(10,2)");
 
                     b.HasKey("Id");
@@ -548,6 +583,71 @@ namespace QuickStart.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("RolePermissions");
+                });
+
+            modelBuilder.Entity("Entities.Models.SensorRecord", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("LineId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OrderDetailId")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("RecordTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("SensorUnits")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("SensorWeight")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LineId");
+
+                    b.HasIndex("OrderDetailId");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("SensorRecords");
+                });
+
+            modelBuilder.Entity("Entities.Models.Stock", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("ProductInformationId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuantityUnits")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("QuantityWeight")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductInformationId")
+                        .IsUnique();
+
+                    b.ToTable("Stock");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -703,57 +803,87 @@ namespace QuickStart.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "bef8f545-49e3-4740-b0d5-7efeb000ec10",
+                            Id = "43aade12-2d07-4ac3-995d-ab3a12b40e6c",
                             Name = "Admin",
                             NormalizedName = "ADMIN",
                             DateCreated = new DateTime(2015, 10, 13, 0, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
-                            Id = "5f35bced-06f3-4939-aa90-38ac9d1bb8db",
+                            Id = "58b29810-3133-4c2a-93c0-b3973fdf092b",
                             Name = "User",
                             NormalizedName = "USER",
                             DateCreated = new DateTime(2015, 10, 13, 0, 0, 0, 0, DateTimeKind.Unspecified)
                         });
                 });
 
-            modelBuilder.Entity("Entities.Models.Account", b =>
+            modelBuilder.Entity("Entities.Models.Distributor", b =>
                 {
-                    b.HasOne("Entities.Models.Customer", "Customer")
-                        .WithMany("Accounts")
-                        .HasForeignKey("CustomerId")
+                    b.HasOne("Entities.Models.Area", "Area")
+                        .WithMany("Distributors")
+                        .HasForeignKey("AreaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Area");
+                });
+
+            modelBuilder.Entity("Entities.Models.InboundRecord", b =>
+                {
+                    b.HasOne("Entities.Models.ProductInformation", "ProductInformation")
+                        .WithMany("InboundRecords")
+                        .HasForeignKey("ProductInformationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Customer");
+                    b.Navigation("ProductInformation");
                 });
 
             modelBuilder.Entity("Entities.Models.Order", b =>
                 {
                     b.HasOne("Entities.Models.Distributor", "Distributor")
-                        .WithMany()
-                        .HasForeignKey("DistributorID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Entities.Models.ProductInformation", "ProductInformation")
-                        .WithMany()
-                        .HasForeignKey("ProductInformationID")
+                        .WithMany("Orders")
+                        .HasForeignKey("DistributorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Distributor");
+                });
+
+            modelBuilder.Entity("Entities.Models.OrderDetail", b =>
+                {
+                    b.HasOne("Entities.Models.Order", "Order")
+                        .WithMany("OrderDetails")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.ProductInformation", "ProductInformation")
+                        .WithMany("OrderDetails")
+                        .HasForeignKey("ProductInformationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
 
                     b.Navigation("ProductInformation");
                 });
 
             modelBuilder.Entity("Entities.Models.OrderLineDetail", b =>
                 {
+                    b.HasOne("Entities.Models.Line", "Line")
+                        .WithMany("OrderLineDetails")
+                        .HasForeignKey("LineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Entities.Models.Order", "Order")
-                        .WithMany()
+                        .WithMany("OrderLineDetails")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Line");
 
                     b.Navigation("Order");
                 });
@@ -766,15 +896,19 @@ namespace QuickStart.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Entities.Models.ProductInformation", "ProductInformation")
+                    b.HasOne("Entities.Models.OrderDetail", "OrderDetail")
                         .WithMany("Products")
-                        .HasForeignKey("ProductInformationId")
+                        .HasForeignKey("OrderDetailId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Entities.Models.ProductInformation", null)
+                        .WithMany("Products")
+                        .HasForeignKey("ProductInformationId");
+
                     b.Navigation("Distributor");
 
-                    b.Navigation("ProductInformation");
+                    b.Navigation("OrderDetail");
                 });
 
             modelBuilder.Entity("Entities.Models.RolePermission", b =>
@@ -802,6 +936,44 @@ namespace QuickStart.Migrations
                     b.Navigation("Permission");
 
                     b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("Entities.Models.SensorRecord", b =>
+                {
+                    b.HasOne("Entities.Models.Line", "Line")
+                        .WithMany("SensorRecords")
+                        .HasForeignKey("LineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.OrderDetail", "OrderDetail")
+                        .WithMany("SensorRecords")
+                        .HasForeignKey("OrderDetailId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.Order", "Order")
+                        .WithMany("SensorRecords")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Line");
+
+                    b.Navigation("Order");
+
+                    b.Navigation("OrderDetail");
+                });
+
+            modelBuilder.Entity("Entities.Models.Stock", b =>
+                {
+                    b.HasOne("Entities.Models.ProductInformation", "ProductInformation")
+                        .WithOne("Stock")
+                        .HasForeignKey("Entities.Models.Stock", "ProductInformationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ProductInformation");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -855,19 +1027,51 @@ namespace QuickStart.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Entities.Models.Customer", b =>
+            modelBuilder.Entity("Entities.Models.Area", b =>
                 {
-                    b.Navigation("Accounts");
+                    b.Navigation("Distributors");
                 });
 
             modelBuilder.Entity("Entities.Models.Distributor", b =>
                 {
+                    b.Navigation("Orders");
+
                     b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("Entities.Models.Line", b =>
+                {
+                    b.Navigation("OrderLineDetails");
+
+                    b.Navigation("SensorRecords");
+                });
+
+            modelBuilder.Entity("Entities.Models.Order", b =>
+                {
+                    b.Navigation("OrderDetails");
+
+                    b.Navigation("OrderLineDetails");
+
+                    b.Navigation("SensorRecords");
+                });
+
+            modelBuilder.Entity("Entities.Models.OrderDetail", b =>
+                {
+                    b.Navigation("Products");
+
+                    b.Navigation("SensorRecords");
                 });
 
             modelBuilder.Entity("Entities.Models.ProductInformation", b =>
                 {
+                    b.Navigation("InboundRecords");
+
+                    b.Navigation("OrderDetails");
+
                     b.Navigation("Products");
+
+                    b.Navigation("Stock")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

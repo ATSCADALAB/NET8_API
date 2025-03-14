@@ -8,12 +8,19 @@ namespace Contracts
     public interface IOrderRepository
     {
         // Lấy tất cả đơn hàng
-        Task<IEnumerable<Order>> GetOrdersAsync(bool trackChanges);
+        Task<IEnumerable<Order>> GetAllOrdersAsync(bool trackChanges);
 
-        // Lấy chi tiết đơn hàng theo ID
+        // Lấy đơn hàng theo ID
         Task<Order> GetOrderByIdAsync(Guid orderId, bool trackChanges);
-        // Lấy chi tiết đơn hàng theo mã đơn hàng
-        Task<Order> GetOrderByOrderCodeAsync(string code, bool trackChanges);
+
+        // Lấy đơn hàng theo mã đơn hàng
+        Task<Order> GetOrderByCodeAsync(string orderCode, bool trackChanges);
+
+        // Lấy danh sách đơn hàng theo đại lý
+        Task<IEnumerable<Order>> GetOrdersByDistributorAsync(int distributorId, bool trackChanges);
+
+        // Lấy danh sách đơn hàng theo ngày xuất
+        Task<IEnumerable<Order>> GetOrdersByExportDateAsync(DateTime exportDate, bool trackChanges);
 
         // Tạo đơn hàng mới
         void CreateOrder(Order order);
@@ -23,6 +30,5 @@ namespace Contracts
 
         // Xóa đơn hàng
         void DeleteOrder(Order order);
-
     }
 }

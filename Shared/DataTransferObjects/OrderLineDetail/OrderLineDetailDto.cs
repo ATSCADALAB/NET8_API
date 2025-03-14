@@ -1,16 +1,20 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
-using Shared.DataTransferObjects.Order;
+﻿using Shared.DataTransferObjects.Order;
+using Shared.DataTransferObjects.Line;
 
-namespace Shared.DataTransferObjects
+namespace Shared.DataTransferObjects.OrderLineDetail
 {
     public record OrderLineDetailDto
     {
-        public long Id { get; set; } // Long ID, tự động tăng
-        public int SequenceNumber { get; set; } // Số thứ tự
-        public Guid OrderId { get; set; } // OrderID
-        public int Line { get; set; } // Line
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow; // Thời gian tạo
-        public OrderDto Order { get; set; } // Navigation property
+        public int Id { get; init; }
+        public Guid OrderId { get; init; }
+        public int SequenceNumber { get; init; }
+        public int LineId { get; init; }
+        public DateTime StartTime { get; init; }
+        public DateTime? EndTime { get; init; }
+        public DateTime CreatedAt { get; init; }
+
+        // Thông tin liên quan
+        public OrderDto Order { get; init; }
+        public LineDto Line { get; init; }
     }
 }

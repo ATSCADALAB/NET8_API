@@ -7,21 +7,25 @@ namespace Contracts
 {
     public interface IOrderLineDetailRepository
     {
-        // Lấy tất cả đơn hàng
-        Task<IEnumerable<OrderLineDetail>> GetOrderLineDetailsAsync(bool trackChanges);
+        // Lấy tất cả chi tiết dòng đơn hàng
+        Task<IEnumerable<OrderLineDetail>> GetAllOrderLineDetailsAsync(bool trackChanges);
 
-        // Lấy chi tiết đơn hàng theo ID
-        Task<OrderLineDetail> GetOrderLineDetailByIdAsync(Guid OrderlId, bool trackChanges);
+        // Lấy chi tiết dòng đơn hàng theo ID
+        Task<OrderLineDetail> GetOrderLineDetailByIdAsync(int orderLineDetailId, bool trackChanges);
 
-        // Tạo đơn hàng mới
-        void CreateOrderLineDetail(OrderLineDetail OrderLineDetail);
+        // Lấy danh sách chi tiết dòng theo Order ID
+        Task<IEnumerable<OrderLineDetail>> GetOrderLineDetailsByOrderIdAsync(Guid orderId, bool trackChanges);
 
-        // Cập nhật thông tin đơn hàng
-        void UpdateOrderLineDetail(OrderLineDetail OrderLineDetail);
+        // Lấy danh sách chi tiết dòng theo Line ID
+        Task<IEnumerable<OrderLineDetail>> GetOrderLineDetailsByLineIdAsync(int lineId, bool trackChanges);
 
-        // Xóa đơn hàng
-        void DeleteOrderLineDetail(OrderLineDetail OrderLineDetail);
+        // Tạo chi tiết dòng đơn hàng mới
+        void CreateOrderLineDetail(OrderLineDetail orderLineDetail);
 
-        Task<int> GetMaxSequenceNumberByLineAsync(int line); // Thêm dòng này
+        // Cập nhật thông tin chi tiết dòng đơn hàng
+        void UpdateOrderLineDetail(OrderLineDetail orderLineDetail);
+
+        // Xóa chi tiết dòng đơn hàng
+        void DeleteOrderLineDetail(OrderLineDetail orderLineDetail);
     }
 }

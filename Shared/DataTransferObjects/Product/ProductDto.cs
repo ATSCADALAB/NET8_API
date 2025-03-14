@@ -1,21 +1,22 @@
-﻿using Shared.DataTransferObjects.ProductInformation;
+﻿using Shared.DataTransferObjects.OrderDetail;
+using Shared.DataTransferObjects.Distributor;
 
 namespace Shared.DataTransferObjects.Product
 {
     public record ProductDto
     {
-        public long Id { get; init; }
+        public int Id { get; init; }
         public string TagID { get; init; }
+        public int OrderDetailId { get; init; }
         public DateTime ShipmentDate { get; init; }
-        public DateTime ProductDate { get; init; }
-        public string Delivery { get; init; }
-        public string StockOut { get; init; }
+        public DateTime ManufactureDate { get; init; }
+        public int DistributorId { get; init; }
         public bool IsActive { get; init; }
-        public long DistributorId { get; init; }
-        public long ProductInformationId { get; init; }
+        public DateTime CreatedAt { get; init; }
+        public DateTime UpdatedAt { get; init; }
 
-        // Thêm DTO con để hiển thị chi tiết
+        // Thông tin liên quan
+        public OrderDetailDto OrderDetail { get; init; }
         public DistributorDto Distributor { get; init; }
-        public ProductInformationDto ProductInformation { get; init; }
     }
 }

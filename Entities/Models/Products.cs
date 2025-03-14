@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
@@ -6,33 +7,26 @@ using Microsoft.EntityFrameworkCore;
 namespace Entities.Models
 {
     [Table("Products")]
-    [Index(nameof(TagID), IsUnique = true, Name = "IX_Products_TagID")]
+    [Index(nameof(TagID), IsUnique = true)] // Đảm bảo TagID duy nhất
     public class Product
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public long Id { get; set; }
+        public int Id { get; set; }
 
         [Required]
         [StringLength(50, MinimumLength = 1)]
         public string TagID { get; set; }
 
+        [Required]
+        public int OrderDetailId { get; set; }
+
         public DateTime ShipmentDate { get; set; } = DateTime.UtcNow;
 
-        // Loại bỏ trường Weight vì đã có trong ProductInformations
-        // [Required]
-        // [Column(TypeName = "decimal(10,2)")]
-        // public decimal Weight { get; set; } = 0m;
-
-        public DateTime ProductDate { get; set; } = DateTime.UtcNow;
+        public DateTime ManufactureDate { get; set; } = DateTime.UtcNow;
 
         [Required]
-        [StringLength(200, MinimumLength = 1)]
-        public string Delivery { get; set; }
-
-        [Required]
-        [StringLength(200, MinimumLength = 1)]
-        public string StockOut { get; set; }
+        public int DistributorId { get; set; }
 
         public bool IsActive { get; set; } = true;
 
@@ -40,16 +34,12 @@ namespace Entities.Models
 
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        // Mối quan hệ với Distributor (many-to-one)
-        public long DistributorId { get; set; }
+        // Mối quan hệ với OrderDetail (many-to-one)
+        [ForeignKey(nameof(OrderDetailId))]
+        public virtual OrderDetail OrderDetail { get; set; }
 
+        // Mối quan hệ với Distributor (many-to-one)
         [ForeignKey(nameof(DistributorId))]
         public virtual Distributor Distributor { get; set; }
-
-        // Mối quan hệ với ProductInformations (many-to-one)
-        public long ProductInformationId { get; set; }
-
-        [ForeignKey(nameof(ProductInformationId))]
-        public virtual ProductInformation ProductInformation { get; set; }
     }
 }

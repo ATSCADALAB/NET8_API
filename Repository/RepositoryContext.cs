@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Repository.Configuration;
+using System.Security.Principal;
 using System.Text;
 
 namespace Repository
@@ -12,19 +13,19 @@ namespace Repository
     public class RepositoryContext : IdentityDbContext<User>
     {
         public RepositoryContext(DbContextOptions options)
-        : base(options)
+            : base(options)
         {
         }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-
             // Cấu hình các phần phân quyền người dùng
             modelBuilder.Entity<RolePermission>()
-            .HasOne(rp => rp.Role)
-            .WithMany()
-            .HasForeignKey(rp => rp.RoleId);
+                .HasOne(rp => rp.Role)
+                .WithMany()
+                .HasForeignKey(rp => rp.RoleId);
 
             modelBuilder.Entity<RolePermission>()
                 .HasOne(rp => rp.Permission)
@@ -36,9 +37,7 @@ namespace Repository
                 .WithMany()
                 .HasForeignKey(rp => rp.CategoryId);
 
-            //
-
-
+            // Cấu hình bảng Identity
             modelBuilder.Entity<User>(entity =>
             {
                 entity.ToTable(name: "Users");
@@ -74,31 +73,99 @@ namespace Repository
                 entity.ToTable("UserTokens");
             });
 
-            modelBuilder.ApplyConfiguration(new CustomerConfiguration());
-            modelBuilder.ApplyConfiguration(new AccountConfiguration());
+            // OrderDetail
+            modelBuilder.Entity<OrderDetail>()
+                .HasOne(od => od.Order)
+                .WithMany(o => o.OrderDetails)
+                .HasForeignKey(od => od.OrderId);
+            modelBuilder.Entity<OrderDetail>()
+                .HasOne(od => od.ProductInformation)
+                .WithMany(pi => pi.OrderDetails)
+                .HasForeignKey(od => od.ProductInformationId);
+
+            // OrderLineDetail
+            modelBuilder.Entity<OrderLineDetail>()
+                .HasOne(old => old.Order)
+                .WithMany(o => o.OrderLineDetails)
+                .HasForeignKey(old => old.OrderId);
+            modelBuilder.Entity<OrderLineDetail>()
+                .HasOne(old => old.Line)
+                .WithMany(l => l.OrderLineDetails)
+                .HasForeignKey(old => old.LineId);
+
+            // Product
+            modelBuilder.Entity<Product>()
+                .HasOne(p => p.OrderDetail)
+                .WithMany(od => od.Products)
+                .HasForeignKey(p => p.OrderDetailId);
+            modelBuilder.Entity<Product>()
+                .HasOne(p => p.Distributor)
+                .WithMany(d => d.Products)
+                .HasForeignKey(p => p.DistributorId);
+
+            // SensorRecord
+            modelBuilder.Entity<SensorRecord>()
+                .HasOne(sr => sr.Order)
+                .WithMany(o => o.SensorRecords)
+                .HasForeignKey(sr => sr.OrderId);
+            modelBuilder.Entity<SensorRecord>()
+                .HasOne(sr => sr.OrderDetail)
+                .WithMany(od => od.SensorRecords)
+                .HasForeignKey(sr => sr.OrderDetailId);
+            modelBuilder.Entity<SensorRecord>()
+                .HasOne(sr => sr.Line)
+                .WithMany(l => l.SensorRecords)
+                .HasForeignKey(sr => sr.LineId);
+
+            // Stock
+            modelBuilder.Entity<Stock>()
+                .HasOne(s => s.ProductInformation)
+                .WithOne(pi => pi.Stock)
+                .HasForeignKey<Stock>(s => s.ProductInformationId);
+
+            // Order
+            modelBuilder.Entity<Order>()
+                .HasOne(o => o.Distributor)
+                .WithMany(d => d.Orders)
+                .HasForeignKey(o => o.DistributorId);
+
+            // Distributor
+            modelBuilder.Entity<Distributor>()
+            .HasOne(d => d.Area)
+            .WithMany(a => a.Distributors)
+            .HasForeignKey(d => d.AreaId)
+            .OnDelete(DeleteBehavior.Restrict); // Ngăn xóa cascade nếu cần
+
+            //Áp dụng configuration(nếu có)
             modelBuilder.ApplyConfiguration(new RoleConfiguration());
-            //  modelBuilder.ApplyConfiguration(new UserConfiguration());
+            modelBuilder.ApplyConfiguration(new UserConfiguration());
         }
+
+        // DbSet cho các bảng mới
+        public DbSet<Area> Areas { get; set; } = default!;
+        public DbSet<Line> Lines { get; set; } = default!;
+        public DbSet<Distributor> Distributors { get; set; } = default!;
+        public DbSet<ProductInformation> ProductInformations { get; set; } = default!;
+        public DbSet<Order> Orders { get; set; } = default!;
+        public DbSet<OrderDetail> OrderDetails { get; set; } = default!;
+        public DbSet<OrderLineDetail> OrderLineDetails { get; set; } = default!;
+        public DbSet<SensorRecord> SensorRecords { get; set; } = default!;
+        public DbSet<Product> Products { get; set; } = default!;
+        public DbSet<Stock> Stock { get; set; } = default!;
+        public DbSet<InboundRecord> InboundRecords { get; set; } = default!;
+
+        // DbSet cho các bảng cũ
         public DbSet<AuditLog> AuditLogs { get; set; } = default!;
-        public DbSet<Customer>? Customers { get; set; }
-        public DbSet<Account>? Accounts { get; set; }
         public DbSet<Category> Categories { get; set; } = default!;
         public DbSet<Permission> Permissions { get; set; } = default!;
         public DbSet<RolePermission> RolePermissions { get; set; } = default!;
-        public DbSet<Product> Products { get; set; }
-        public DbSet<Distributor> Distributors { get; set; } // Thêm DbSet cho Distributor
-        public DbSet<ProductInformation> ProductInformations { get; set; } // Thêm DbSet cho ProductInformations
-
-        public DbSet<Order> Orders { get; set; } // Thêm DbSet cho Order
-        public DbSet<OrderLineDetail> OrderLineDetails { get; set; } // Thêm DbSet cho Order
-
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             var modifiedEntities = ChangeTracker.Entries()
                 .Where(e => e.State == EntityState.Added
-                || e.State == EntityState.Modified
-                || e.State == EntityState.Deleted)
+                         || e.State == EntityState.Modified
+                         || e.State == EntityState.Deleted)
                 .ToList();
 
             foreach (var modifiedEntity in modifiedEntities)
@@ -134,6 +201,5 @@ namespace Repository
 
             return changes.ToString();
         }
-
     }
 }

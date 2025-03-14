@@ -12,7 +12,7 @@ namespace Entities.Models
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public long Id { get; set; }
+        public int Id { get; set; }
 
         [Required]
         [StringLength(50, MinimumLength = 1)]
@@ -21,6 +21,9 @@ namespace Entities.Models
         [Required]
         [StringLength(100, MinimumLength = 1)]
         public string DistributorName { get; set; }
+        [Required]
+        [StringLength(100, MinimumLength = 1)]
+        public string ContactSource { get; set; }
 
         [Required]
         [StringLength(200, MinimumLength = 1)]
@@ -30,21 +33,21 @@ namespace Entities.Models
         [StringLength(20, MinimumLength = 10)]
         public string PhoneNumber { get; set; }
 
-        [StringLength(100)]
-        public string ContactSource { get; set; }
-
         [Required]
-        [StringLength(50, MinimumLength = 1)]
-        public string Area { get; set; }
-
-        [StringLength(500)]
-        public string Note { get; set; }
+        public int AreaId { get; set; }
 
         public bool IsActive { get; set; } = true;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        // Mối quan hệ với Area (many-to-one)
+        [ForeignKey(nameof(AreaId))]
+        public virtual Area Area { get; set; }
+
+        // Mối quan hệ với Order (one-to-many)
+        public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 
         // Mối quan hệ với Product (one-to-many)
         public virtual ICollection<Product> Products { get; set; } = new List<Product>();

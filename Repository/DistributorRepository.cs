@@ -1,7 +1,8 @@
 ﻿using Contracts;
 using Entities.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Xml.Linq;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Repository
 {
@@ -11,42 +12,33 @@ namespace Repository
         {
         }
 
-        public void CreateDistributor(Distributor distributor)
-        {
-            Create(distributor);
-        }
+        public async Task<IEnumerable<Distributor>> GetAllDistributorsAsync(bool trackChanges) =>
+            await FindAll(trackChanges)
+            .Include(d => d.Area)
+                .OrderBy(d => d.DistributorCode)
 
-        public void DeleteDistributor(Distributor distributor)
-        {
-            Delete(distributor);
-        }
-        // Triển khai AddRangeAsync
-        public async Task AddRangeAsync(IEnumerable<Distributor> distributors)
-        {
-            await RepositoryContext.Set<Distributor>().AddRangeAsync(distributors);
-        }
-        public async Task<IEnumerable<Distributor>> GetDistributorsAsync(bool trackChanges)
-        {
-            return await FindAll(trackChanges)
-                .OrderBy(d => d.DistributorName)
-                .Include(d => d.Products)
                 .ToListAsync();
-        }
-        public async Task<IEnumerable<Distributor>> GetDistributorsByNameAsync(string Name)
-        {
-            return await FindAll(false).Where(d => EF.Functions.Like(d.DistributorName, $"%{Name}%")).ToListAsync(); // Sử dụng LIKE
-        }
 
-        public async Task<Distributor> GetDistributorAsync(long distributorId, bool trackChanges)
-        {
-            return await FindByCondition(d => d.Id.Equals(distributorId), trackChanges)
-                .Include(d => d.Products)
+        public async Task<Distributor> GetDistributorByIdAsync(int distributorId, bool trackChanges) =>
+            await FindByCondition(d => d.Id == distributorId, trackChanges)
+                .Include(d => d.Area)
                 .SingleOrDefaultAsync();
-        }
 
-        public async Task SaveChangesAsync()
-        {
-            await RepositoryContext.SaveChangesAsync();
-        }
+        public async Task<Distributor> GetDistributorByCodeAsync(string distributorCode, bool trackChanges) =>
+            await FindByCondition(d => d.DistributorCode == distributorCode, trackChanges)
+                .Include(d => d.Area)
+                .SingleOrDefaultAsync();
+
+        public async Task<IEnumerable<Distributor>> GetDistributorsByAreaAsync(int areaId, bool trackChanges) =>
+            await FindByCondition(d => d.AreaId == areaId, trackChanges)
+                .Include(d => d.Area)
+                .OrderBy(d => d.DistributorCode)
+                .ToListAsync();
+
+        public void CreateDistributor(Distributor distributor) => Create(distributor);
+
+        public void UpdateDistributor(Distributor distributor) => Update(distributor);
+
+        public void DeleteDistributor(Distributor distributor) => Delete(distributor);
     }
 }

@@ -1,104 +1,76 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using QuickStart.Presentation.ActionFilters;
 using Service.Contracts;
-using Shared.DataTransferObjects;
 using Shared.DataTransferObjects.OrderLineDetail;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
 
 namespace QuickStart.Presentation.Controllers
 {
-    [Route("api/OrderLineDetails")]
+    [Route("api/order-line-details")]
     [ApiController]
+    //[Authorize]
     public class OrderLineDetailController : ControllerBase
     {
         private readonly IServiceManager _service;
 
         public OrderLineDetailController(IServiceManager service) => _service = service;
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<OrderLineDetailDto>>> GetAllOrderLineDetails()
-        {
-            try
-            {
-                var orderLineDetails = await _service.OrderLineDetailService.GetAllOrderLineDetailsAsync();
-                if (orderLineDetails == null || !orderLineDetails.Any())
-                    return NotFound("No order line details found.");
 
-                return Ok(orderLineDetails);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error retrieving order line details: {ex.Message}");
-            }
+        [HttpGet]
+        [AuthorizePermission("OrderLineDetails", "View")]
+        public async Task<IActionResult> GetAllOrderLineDetails()
+        {
+            var orderLineDetails = await _service.OrderLineDetailService.GetAllOrderLineDetailsAsync(trackChanges: false);
+            return Ok(orderLineDetails);
         }
 
-        [HttpGet("{id:guid}")]
-        public async Task<IActionResult> GetOrderLineDetailById(Guid id)
+        [HttpGet("{orderLineDetailId:int}", Name = "GetOrderLineDetailById")]
+        [AuthorizePermission("OrderLineDetails", "View")]
+        public async Task<IActionResult> GetOrderLineDetail(int orderLineDetailId)
         {
-            try
-            {
-                var orderLineDetail = await _service.OrderLineDetailService.GetOrderLineDetailByIdAsync(id);
-                if (orderLineDetail == null)
-                    return NotFound($"Order line detail with ID {id} not found.");
+            var orderLineDetail = await _service.OrderLineDetailService.GetOrderLineDetailAsync(orderLineDetailId, trackChanges: false);
+            return Ok(orderLineDetail);
+        }
 
-                return Ok(orderLineDetail);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error retrieving order line detail: {ex.Message}");
-            }
+        [HttpGet("by-order/{orderId:guid}")]
+        [AuthorizePermission("OrderLineDetails", "View")]
+        public async Task<IActionResult> GetOrderLineDetailsByOrder(Guid orderId)
+        {
+            var orderLineDetails = await _service.OrderLineDetailService.GetOrderLineDetailsByOrderAsync(orderId, trackChanges: false);
+            return Ok(orderLineDetails);
+        }
+
+        [HttpGet("by-line/{lineId:int}")]
+        [AuthorizePermission("OrderLineDetails", "View")]
+        public async Task<IActionResult> GetOrderLineDetailsByLine(int lineId)
+        {
+            var orderLineDetails = await _service.OrderLineDetailService.GetOrderLineDetailsByLineAsync(lineId, trackChanges: false);
+            return Ok(orderLineDetails);
         }
 
         [HttpPost]
-        public async Task<ActionResult<OrderLineDetailDto>> CreateOrderLineDetail([FromBody] OrderLineDetailForCreationDto orderLineDetailDto)
+        [ServiceFilter(typeof(ValidationFilterAttribute))]
+        [AuthorizePermission("OrderLineDetails", "Create")]
+        public async Task<IActionResult> CreateOrderLineDetail([FromBody] OrderLineDetailForCreationDto orderLineDetail)
         {
-            try
-            {
-                if (orderLineDetailDto == null)
-                    return BadRequest("Order line detail data is null.");
-
-                var createdOrderLineDetail = await _service.OrderLineDetailService.CreateOrderLineDetailAsync(orderLineDetailDto);
-                return null;
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error creating order line detail: {ex.Message}");
-            }
+            var createdOrderLineDetail = await _service.OrderLineDetailService.CreateOrderLineDetailAsync(orderLineDetail);
+            return CreatedAtRoute("GetOrderLineDetailById", new { orderLineDetailId = createdOrderLineDetail.Id }, createdOrderLineDetail);
         }
 
-        [HttpPut("{id:guid}")]
-        public async Task<ActionResult<OrderLineDetailDto>> UpdateOrderLineDetail(Guid id, [FromBody] OrderLineDetailForUpdateDto orderLineDetailDto)
+        [HttpPut("{orderLineDetailId:int}")]
+        [ServiceFilter(typeof(ValidationFilterAttribute))]
+        [AuthorizePermission("OrderLineDetails", "Update")]
+        public async Task<IActionResult> UpdateOrderLineDetail(int orderLineDetailId, [FromBody] OrderLineDetailForUpdateDto orderLineDetailForUpdate)
         {
-            try
-            {
-                if (orderLineDetailDto == null)
-                    return BadRequest("Order line detail update data is null.");
-
-                var updatedOrderLineDetail = await _service.OrderLineDetailService.UpdateOrderLineDetailAsync(id, orderLineDetailDto);
-                if (updatedOrderLineDetail == null)
-                    return NotFound($"Order line detail with ID {id} not found.");
-
-                return Ok(updatedOrderLineDetail);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error updating order line detail: {ex.Message}");
-            }
+            await _service.OrderLineDetailService.UpdateOrderLineDetailAsync(orderLineDetailId, orderLineDetailForUpdate, trackChanges: true);
+            return NoContent();
         }
 
-        [HttpDelete("{id:guid}")]
-        public async Task<IActionResult> DeleteOrderLineDetail(Guid id)
+        [HttpDelete("{orderLineDetailId:int}")]
+        [AuthorizePermission("OrderLineDetails", "Delete")]
+        public async Task<IActionResult> DeleteOrderLineDetail(int orderLineDetailId)
         {
-            try
-            {
-                await _service.OrderLineDetailService.DeleteOrderLineDetailAsync(id, trackChanges: false);
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error deleting order line detail: {ex.Message}");
-            }
+            await _service.OrderLineDetailService.DeleteOrderLineDetailAsync(orderLineDetailId, trackChanges: false);
+            return NoContent();
         }
     }
 }

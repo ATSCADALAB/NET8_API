@@ -1,23 +1,21 @@
-﻿namespace Shared.DataTransferObjects
+﻿using Shared.DataTransferObjects.Area;
+
+namespace Shared.DataTransferObjects.Distributor
 {
     public record DistributorDto
     {
-        public long Id { get; init; } // Đổi từ Guid sang long để khớp với model
+        public int Id { get; init; }
+        public string DistributorCode { get; init; }
+        public string DistributorName { get; init; }
+        public string Address { get; init; }
+        public string ContactSource { get; set; }
+        public string PhoneNumber { get; init; }
+        public int AreaId { get; init; }
+        public bool IsActive { get; init; }
+        public DateTime CreatedAt { get; init; }
+        public DateTime UpdatedAt { get; init; }
 
-        public string DistributorCode { get; init; } // Thêm DistributorCode
-
-        public string DistributorName { get; init; } // Thay thế FirstName và LastName
-
-        public string Address { get; init; } // Giữ nguyên
-
-        public string PhoneNumber { get; init; } // Thêm PhoneNumber
-
-        public string? ContactSource { get; init; } // Thêm ContactSource (có thể null)
-
-        public string Area { get; init; } // Thêm Area (thay thế Country)
-
-        public string? Note { get; init; } // Thêm Note (có thể null)
-
-        public bool IsActive { get; init; } // Thay thế status
+        // Thông tin liên quan
+        public AreaDto Area { get; init; }
     }
 }

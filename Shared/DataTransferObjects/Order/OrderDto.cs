@@ -1,37 +1,22 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using Shared.DataTransferObjects.Distributor;
 
 namespace Shared.DataTransferObjects.Order
 {
     public record OrderDto
     {
-        public Guid Id { get; set; }
-        public string Code { get; set; } //Mã Đơn hàng
-        public DateTime ExportDate { get; set; } //Ngày xuất hàng
-        public int QuantityVehicle { get; set; } //Số tài xe
-        public string VehicleNumber { get; set; } //Biển số xe vận chuyển
-        public int ContainerNumber { get; set; } // Số Cont 
-        public int SealNumber { get; set; } //Số Seal
-        public string DriverName { get; set; } //Tên TX
-        public string DriverPhoneNumber { get; set; } //SĐT TX
+        public Guid Id { get; init; }
+        public string OrderCode { get; init; }
+        public DateTime ExportDate { get; init; }
+        public string VehicleNumber { get; init; }
+        public int DriverNumber { get; init; }
+        public string DriverName { get; init; }
+        public string DriverPhoneNumber { get; init; }
+        public int Status { get; init; }
+        public int DistributorId { get; init; }
+        public DateTime CreatedAt { get; init; }
+        public DateTime UpdatedAt { get; init; }
 
-        public long ProductInformationID { get; set; }
-        public string ProductCode { get; set; } //Mã SP
-        public string ProductName {  get; set; } //Tên SP
-        public long DistributorID { get; set; }
-        public string DistributorName { get; set; } //Tên Đại Lý
-        public string DistributorArea { get; set; } //Khu vực Đại Lý
-        public string UnitOrder { get; set; } //Số lượng ( Bao )
-        public decimal WeightOrder { get; set; } = 0m; // Số Lượng ( Kg )
-        public DateTime ManufactureDate { get; set; } // Ngày sản xuất đơn hàng
-        
-        public bool Status { get; set; } = false; // Trạng thái đơn hàng
-        //
-        public DateTime CreatedDate { get; set; } = DateTime.UtcNow; // Ngày tạo đơn hàng
-        public DateTime? UpdatedDate { get; set; } // Ngày cập nhật trạng thái
-
-        public string? CreatedBy { get; set; } // Người tạo đơn hàng
-        public string? UpdatedBy { get; set; } // Người cập nhật trạng thái
+        // Thông tin liên quan
+        public DistributorDto Distributor { get; init; }
     }
 }

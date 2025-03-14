@@ -1,4 +1,7 @@
 ﻿namespace Shared.DataTransferObjects.ProductInformation
 {
-    public record ProductInformationForCreationDto : ProductInformationForManipulationDto;
+    public record ProductInformationForCreationDto : ProductInformationForManipulationDto
+    {
+        
+    }
 }

@@ -2,16 +2,13 @@
 {
     public record ProductInformationDto
     {
-        public long Id { get; init; } // Khớp với model, dùng long thay vì Guid
-
+        public int Id { get; init; }
         public string ProductCode { get; init; }
-
         public string ProductName { get; init; }
-
         public string Unit { get; init; }
-
-        public decimal Weight { get; init; }
-
-        public bool IsActive { get; init; } // Thay thế status
+        public decimal WeightPerUnit { get; init; }
+        public bool IsActive { get; init; }
+        public DateTime CreatedAt { get; init; }
+        public DateTime UpdatedAt { get; init; }
     }
 }
