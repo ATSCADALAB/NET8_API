@@ -41,6 +41,17 @@ namespace Repository
                 .Include(o => o.Order)
                 .FirstOrDefaultAsync();
         }
+        public async Task<OrderLineDetail> GetOrderLineDetailByLineIDAsync(long line, bool trackChanges)
+        {
+            return await FindAll(trackChanges)
+                .Where(d=>d.Line==line)
+                .Include(o => o.Order)
+                .OrderBy(o => o.SequenceNumber) // Sắp xếp theo SequenceNumber tăng dần
+                .FirstOrDefaultAsync();
+            //return await FindByCondition(o => o.Line.Equals(line), trackChanges)
+            //    .Include(o => o.Order)
+            //    .FirstOrDefaultAsync();
+        }
         // Tạo đơn hàng mới
         public void CreateOrderLineDetail(OrderLineDetail OrderLineDetail)
         {

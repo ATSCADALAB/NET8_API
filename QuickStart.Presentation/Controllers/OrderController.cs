@@ -153,7 +153,22 @@ namespace QuickStart.Presentation.Controllers
 
             return NoContent();
         }
+        [HttpPatch("{id:guid}/status")]
+        public async Task<ActionResult> UpdateOrderStatus(Guid id, [FromBody] int newStatus)
+        {
+            try
+            {
+                if (newStatus < 0 || newStatus > 3) // Giả sử Status chỉ từ 0-2
+                    return BadRequest("Invalid status value. Status must be between 0 and 2.");
 
+                await _service.OrderService.UpdateStatusAsync(id, 2);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error updating order status: {ex.Message}");
+            }
+        }
 
         [HttpPost("import")]
         public async Task<IActionResult> ImportOrders(IFormFile file)

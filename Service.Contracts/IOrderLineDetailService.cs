@@ -12,6 +12,7 @@ namespace Service.Contracts
         Task<IEnumerable<OrderLineDetail>> GetAllOrderLineDetailsAsync();
 
         Task<OrderLineDetail> GetOrderLineDetailByIdAsync(Guid OrderlId);
+        Task<OrderLineDetail> GetOrderLineDetailByLineIDAsync(long lineID);
 
         Task<OrderLineDetailDto> CreateOrderLineDetailAsync(OrderLineDetailForCreationDto OrderLineDetailForCreationDto);
 

@@ -13,7 +13,7 @@ namespace QuickStart
                 {
                     FirstName = "ATSCADA",
                     LastName = "LAB",
-                    UserName = "atlab",
+                    UserName = "admin",
                     Email = "soft@atpro.com.vn",
                 };
 

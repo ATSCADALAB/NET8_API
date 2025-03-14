@@ -34,7 +34,7 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpGet("{id:guid}")]
-        public async Task<IActionResult> GetOrderLineDetailById(Guid id)
+        public async Task<IActionResult> GetOrderLineDetailByOrderId(Guid id)
         {
             try
             {
@@ -49,7 +49,22 @@ namespace QuickStart.Presentation.Controllers
                 return StatusCode(500, $"Error retrieving order line detail: {ex.Message}");
             }
         }
+        [HttpGet("byLine/{line:int}")]
+        public async Task<IActionResult> GetOrderLineDetailByLine(int id)
+        {
+            try
+            {
+                var orderLineDetail = await _service.OrderLineDetailService.GetOrderLineDetailByLineIDAsync(id);
+                if (orderLineDetail == null)
+                    return NotFound($"Order line detail with ID {id} not found.");
 
+                return Ok(orderLineDetail);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error retrieving order line detail: {ex.Message}");
+            }
+        }
         [HttpPost]
         public async Task<ActionResult<OrderLineDetailDto>> CreateOrderLineDetail([FromBody] OrderLineDetailForCreationDto orderLineDetailDto)
         {
