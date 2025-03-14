@@ -12,7 +12,6 @@ namespace QuickStart.Presentation.Controllers
 {
     [Route("api/distributors")]
     [ApiController]
-    [Authorize]
     public class DistributorController : ControllerBase
     {
         private readonly IServiceManager _service;
@@ -109,7 +108,7 @@ namespace QuickStart.Presentation.Controllers
         }
         
         [HttpGet]
-        [AuthorizePermission("Distributors", "View")]
+
         public async Task<IActionResult> GetDistributors()
         {
             var distributors = await _service.DistributorService.GetAllDistributorsAsync(trackChanges: false);
@@ -117,7 +116,7 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpGet("{id:long}", Name = "DistributorById")]
-        [AuthorizePermission("Distributors", "View")]
+
         public async Task<IActionResult> GetDistributor(long id)
         {
             var distributor = await _service.DistributorService.GetDistributorAsync(id, trackChanges: false);
@@ -150,7 +149,7 @@ namespace QuickStart.Presentation.Controllers
             return NoContent();
         }
         [HttpGet("template")]
-        [AuthorizePermission("Distributors", "View")]
+
         public IActionResult DownloadProductInformationTemplate()
         {
             var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "Distributor.xlsx");
@@ -162,7 +161,7 @@ namespace QuickStart.Presentation.Controllers
         }
         // GET: api/productInformations/search?name={name}
         [HttpGet("search")]
-        [AuthorizePermission("Distributors", "View")]
+
         public async Task<IActionResult> SearchProductInformations(string name)
         {
             if (string.IsNullOrEmpty(name))

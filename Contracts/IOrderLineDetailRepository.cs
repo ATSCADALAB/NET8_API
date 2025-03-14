@@ -12,6 +12,7 @@ namespace Contracts
 
         // Lấy chi tiết đơn hàng theo ID
         Task<OrderLineDetail> GetOrderLineDetailByIdAsync(Guid OrderlId, bool trackChanges);
+        Task<OrderLineDetail> GetOrderLineDetailByLineIDAsync(long lineID, bool trackChanges);
 
         // Tạo đơn hàng mới
         void CreateOrderLineDetail(OrderLineDetail OrderLineDetail);

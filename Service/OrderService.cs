@@ -176,7 +176,11 @@ namespace Service
                 return null;
             }
         }
-
+        public async Task UpdateStatusAsync(Guid orderId, int newStatus)
+        {
+            await _repository.Order.UpdateStatusAsync(orderId, newStatus);
+            await _repository.SaveAsync();
+        }
         // Nhập khẩu (import) đơn hàng từ file hoặc nguồn bên ngoài
         public async Task<IEnumerable<OrderDto>> ImportOrdersAsync(List<OrderForCreationDto> orders)
         {

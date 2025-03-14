@@ -63,7 +63,20 @@ namespace Service
                 return null;
             }
         }
-        
+        public async Task<OrderLineDetail> GetOrderLineDetailByLineIDAsync(long lineID)
+        {
+            try
+            {
+                var OrderLineDetail = await _repository.OrderLineDetail.GetOrderLineDetailByLineIDAsync(lineID, trackChanges: false);
+
+                return OrderLineDetail;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error fetching OrderLineDetail by id: {ex.Message}");
+                return null;
+            }
+        }
         // Tạo đơn hàng
         public async Task<OrderLineDetailDto> CreateOrderLineDetailAsync(OrderLineDetailForCreationDto OrderLineDetailForCreationDto)
         {
@@ -114,18 +127,33 @@ namespace Service
                 _logger.LogError($"Error updating OrderLineDetail: {ex.Message}");
                 return null;
             }
-        }       
+        }
         public async Task DeleteOrderLineDetailAsync(Guid customerId, bool trackChanges)
         {
-            var OrderLineDetail = await GetOrderLineDetailAndCheckIfItExists(customerId, trackChanges);
+            try
+            {
+                // Tải OrderLineDetail, không cần theo dõi nếu chỉ để xóa
+                var orderLineDetail = await GetOrderLineDetailAndCheckIfItExists(customerId, trackChanges: false);
 
-            _repository.OrderLineDetail.DeleteOrderLineDetail(OrderLineDetail);
-            await _repository.SaveAsync();
+                // Xóa OrderLineDetail
+                _repository.OrderLineDetail.DeleteOrderLineDetail(orderLineDetail);
+                await _repository.SaveAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error deleting OrderLineDetail with ID {customerId}: {ex.Message}");
+                throw; // Ném ngoại lệ để tầng trên xử lý
+            }
         }
+
         private async Task<OrderLineDetail> GetOrderLineDetailAndCheckIfItExists(Guid id, bool trackChanges)
         {
-            var customer = await _repository.OrderLineDetail.GetOrderLineDetailByIdAsync(id, trackChanges);
-            return customer;
+            var orderLineDetail = await _repository.OrderLineDetail.GetOrderLineDetailByIdAsync(id, trackChanges);
+            if (orderLineDetail == null)
+            {
+                throw new Exception($"OrderLineDetail with ID {id} not found.");
+            }
+            return orderLineDetail;
         }
     }
 }

@@ -29,5 +29,6 @@ namespace Service.Contracts
 
         // Nhập khẩu (import) đơn hàng từ file hoặc nguồn bên ngoài
         Task<IEnumerable<OrderDto>> ImportOrdersAsync(List<OrderForCreationDto> orders);
+        Task UpdateStatusAsync(Guid orderId, int newStatus); // Thêm phương thức mới
     }
 }
