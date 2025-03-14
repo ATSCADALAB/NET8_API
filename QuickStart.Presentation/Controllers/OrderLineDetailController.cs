@@ -31,29 +31,45 @@ namespace QuickStart.Presentation.Controllers
             return Ok(orderLineDetail);
         }
 
-        [HttpGet("by-order/{orderId:guid}")]
-        [AuthorizePermission("OrderLineDetails", "View")]
-        public async Task<IActionResult> GetOrderLineDetailsByOrder(Guid orderId)
+        [HttpGet("{id:guid}")]
+        public async Task<IActionResult> GetOrderLineDetailById(Guid id)
         {
-            var orderLineDetails = await _service.OrderLineDetailService.GetOrderLineDetailsByOrderAsync(orderId, trackChanges: false);
-            return Ok(orderLineDetails);
+            try
+            {
+                var orderLineDetail = await _service.OrderLineDetailService.GetOrderLineDetailByIdAsync(id);
+                if (orderLineDetail == null)
+                    return NotFound($"Order line detail with ID {id} not found.");
+
+                return Ok(orderLineDetail);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error retrieving order line detail: {ex.Message}");
+            }
         }
 
-        [HttpGet("by-line/{lineId:int}")]
-        [AuthorizePermission("OrderLineDetails", "View")]
-        public async Task<IActionResult> GetOrderLineDetailsByLine(int lineId)
-        {
-            var orderLineDetails = await _service.OrderLineDetailService.GetOrderLineDetailsByLineAsync(lineId, trackChanges: false);
-            return Ok(orderLineDetails);
+                return Ok(orderLineDetail);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error retrieving order line detail: {ex.Message}");
+            }
         }
-
         [HttpPost]
-        [ServiceFilter(typeof(ValidationFilterAttribute))]
-        [AuthorizePermission("OrderLineDetails", "Create")]
-        public async Task<IActionResult> CreateOrderLineDetail([FromBody] OrderLineDetailForCreationDto orderLineDetail)
+        public async Task<ActionResult<OrderLineDetailDto>> CreateOrderLineDetail([FromBody] OrderLineDetailForCreationDto orderLineDetailDto)
         {
-            var createdOrderLineDetail = await _service.OrderLineDetailService.CreateOrderLineDetailAsync(orderLineDetail);
-            return CreatedAtRoute("GetOrderLineDetailById", new { orderLineDetailId = createdOrderLineDetail.Id }, createdOrderLineDetail);
+            try
+            {
+                if (orderLineDetailDto == null)
+                    return BadRequest("Order line detail data is null.");
+
+                var createdOrderLineDetail = await _service.OrderLineDetailService.CreateOrderLineDetailAsync(orderLineDetailDto);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error creating order line detail: {ex.Message}");
+            }
         }
 
         [HttpPut("{orderLineDetailId:int}")]
