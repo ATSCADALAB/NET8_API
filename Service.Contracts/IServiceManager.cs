@@ -13,7 +13,7 @@
         IProductService ProductService { get; }
         IStockService StockService { get; }
         IInboundRecordService InboundRecordService { get; }
-
+        IReportService ReportService { get; }
         // Các property cũ
         ICategoryService CategoryService { get; }
         IPermissionService PermissionService { get; }
@@ -24,5 +24,6 @@
         IRoleService RoleService { get; }
         IAuditService AuditService { get; }
         IWcfService WcfService { get; }
+        
     }
 }

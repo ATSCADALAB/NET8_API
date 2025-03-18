@@ -25,7 +25,7 @@ namespace QuickStart.Presentation.Controllers
             return Ok(productInformations);
         }
 
-        [HttpGet("{productInformationId:int}", Name = "GetProductInformationById")]
+        [HttpGet("{productInformationId:int}", Name = "GetProductInformationById")] 
         [AuthorizePermission("ProductInformations", "View")]
         public async Task<IActionResult> GetProductInformation(int productInformationId)
         {
