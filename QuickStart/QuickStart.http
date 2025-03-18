@@ -1,6 +1,0 @@
-@QuickStart_HostAddress = http://localhost:5096
-
-GET {{QuickStart_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
