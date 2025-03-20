@@ -14,6 +14,7 @@
         IStockService StockService { get; }
         IInboundRecordService InboundRecordService { get; }
         IReportService ReportService { get; }
+        IDashboardService DashboardService { get; }
         // Các property cũ
         ICategoryService CategoryService { get; }
         IPermissionService PermissionService { get; }

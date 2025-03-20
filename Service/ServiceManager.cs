@@ -28,6 +28,7 @@ namespace Service
         private readonly Lazy<IProductService> _productService;
         private readonly Lazy<IStockService> _stockService;
         private readonly Lazy<IInboundRecordService> _inboundRecordService;
+        private readonly Lazy<IDashboardService> _dashboardService;
 
         // Các service cũ từ ví dụ của bạn
         private readonly Lazy<ICategoryService> _categoryService;
@@ -51,6 +52,7 @@ namespace Service
             IEmailSender emailSender,
             IHubContext<DataHub> hubContext)
         {
+            _dashboardService = new Lazy<IDashboardService>(() => new DashboardService(repositoryManager, logger, mapper));
             _areaService = new Lazy<IAreaService>(() => new AreaService(repositoryManager, logger, mapper));
             _lineService = new Lazy<ILineService>(() => new LineService(repositoryManager, logger, mapper));
             _distributorService = new Lazy<IDistributorService>(() => new DistributorService(repositoryManager, logger, mapper));
@@ -75,6 +77,7 @@ namespace Service
             _wcfService = new Lazy<IWcfService>(() => new WcfService(configuration, hubContext));
         }
 
+        public IDashboardService DashboardService => _dashboardService.Value;
         public IAreaService AreaService => _areaService.Value;
         public ILineService LineService => _lineService.Value;
         public IDistributorService DistributorService => _distributorService.Value;

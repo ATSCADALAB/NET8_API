@@ -27,7 +27,7 @@ namespace Service
             _connectionString = configuration.GetConnectionString("sqlConnection");
         }
 
-        public async Task<IEnumerable<ProductDailyReportDto>> GetProductDailyReportAsync(
+        public async Task<IEnumerable<DashboardSummaryDto>> GetProductDailyReportAsync(
             DateTime startDate,
             DateTime endDate,
             int? lineId,
@@ -50,12 +50,12 @@ namespace Service
                         command.Parameters.Add(new MySqlParameter("@p_line_id", lineId ?? (object)DBNull.Value));
                         command.Parameters.Add(new MySqlParameter("@p_product_information_id", productInformationId ?? (object)DBNull.Value));
 
-                        var reports = new List<ProductDailyReportDto>();
+                        var reports = new List<DashboardSummaryDto>();
                         using (var reader = await command.ExecuteReaderAsync())
                         {
                             while (await reader.ReadAsync())
                             {
-                                reports.Add(new ProductDailyReportDto
+                                reports.Add(new DashboardSummaryDto
                                 {
                                     Date = reader.GetString("Date"),
                                     LineName = reader.GetString("LineName"),
@@ -79,7 +79,7 @@ namespace Service
                         {
                             reports = reports
                                 .GroupBy(r => r.Date)
-                                .Select(g => new ProductDailyReportDto
+                                .Select(g => new DashboardSummaryDto
                                 {
                                     Date = g.Key,
                                     LineName = "All",
@@ -226,7 +226,7 @@ namespace Service
             }
         }
 
-        public async Task<IEnumerable<ProductDailyReportDto>> GetVehicleDailyReportAsync(
+        public async Task<IEnumerable<DashboardSummaryDto>> GetVehicleDailyReportAsync(
             DateTime startDate,
             DateTime endDate,
             string licensePlate = null)
@@ -247,12 +247,12 @@ namespace Service
                         command.Parameters.Add(new MySqlParameter("@p_end_date", endDate));
                         command.Parameters.Add(new MySqlParameter("@p_license_plate", licensePlate ?? (object)DBNull.Value));
 
-                        var reports = new List<ProductDailyReportDto>();
+                        var reports = new List<DashboardSummaryDto>();
                         using (var reader = await command.ExecuteReaderAsync())
                         {
                             while (await reader.ReadAsync())
                             {
-                                reports.Add(new ProductDailyReportDto
+                                reports.Add(new DashboardSummaryDto
                                 {
                                     Date = reader.IsDBNull(reader.GetOrdinal("Date")) ? "" : reader.GetString("Date"),
                                     LineName = reader.GetString("LineName"),
@@ -300,8 +300,8 @@ namespace Service
                     var worksheet = workbook.Worksheet(1); // Lấy sheet đầu tiên
 
                     // Fill thông tin thời gian
-                    worksheet.Cell("C3").Value = $"Từ ngày: {startDate:dd/MM/yyyy}";
-                    worksheet.Cell("D3").Value = $"đến ngày: {endDate:dd/MM/yyyy}";
+                    worksheet.Cell("D3").Value = $"Từ ngày: {startDate:dd/MM/yyyy}";
+                    worksheet.Cell("E3").Value = $"đến ngày: {endDate:dd/MM/yyyy}";
                     worksheet.Cell("B5").Value = $"{licensePlate}";
 
                     // Fill dữ liệu từ row 7
@@ -310,22 +310,23 @@ namespace Service
                     {
                         worksheet.Cell(currentRow, 1).Value = DateTime.Parse(item.Date).ToString("dd/MM/yyyy");
                         worksheet.Cell(currentRow, 2).Value = item.LineName;
-                        worksheet.Cell(currentRow, 3).Value = item.TotalOrders;
-                        worksheet.Cell(currentRow, 4).Value = item.TotalSensorUnits;
-                        worksheet.Cell(currentRow, 5).Value = item.TotalSensorWeight;
+                        worksheet.Cell(currentRow, 3).Value = item.ProductName;
+                        worksheet.Cell(currentRow, 4).Value = item.TotalOrders;
+                        worksheet.Cell(currentRow, 5).Value = item.TotalSensorUnits;
+                        worksheet.Cell(currentRow, 6).Value = item.TotalSensorWeight;
 
                         // Format số
-                        worksheet.Cell(currentRow, 3).Style.NumberFormat.Format = "#,##0";
                         worksheet.Cell(currentRow, 4).Style.NumberFormat.Format = "#,##0";
                         worksheet.Cell(currentRow, 5).Style.NumberFormat.Format = "#,##0";
+                        worksheet.Cell(currentRow, 6).Style.NumberFormat.Format = "#,##0";
 
                         // Border
-                        var range = worksheet.Range(currentRow, 1, currentRow, 5);
+                        var range = worksheet.Range(currentRow, 1, currentRow, 6);
                         range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
                         range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
 
                         // Căn giữa số liệu
-                        worksheet.Range(currentRow, 3, currentRow, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                        worksheet.Range(currentRow, 4, currentRow, 6).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
                         currentRow++;
                     }
@@ -333,21 +334,21 @@ namespace Service
                     // Dòng tổng cộng
                     int totalRow = currentRow;
                     worksheet.Cell(totalRow, 1).Value = "Tổng cộng";
-                    worksheet.Cell(totalRow, 3).FormulaA1 = $"=SUM(C6:C{currentRow - 1})";
-                    worksheet.Cell(totalRow, 4).FormulaA1 = $"=SUM(D6:D{currentRow - 1})";
+                    
                     worksheet.Cell(totalRow, 5).FormulaA1 = $"=SUM(E6:E{currentRow - 1})";
+                    worksheet.Cell(totalRow, 6).FormulaA1 = $"=SUM(F6:F{currentRow - 1})";
 
                     // Format dòng tổng
-                    var totalRange = worksheet.Range(totalRow, 1, totalRow, 5);
+                    var totalRange = worksheet.Range(totalRow, 1, totalRow, 6);
                     totalRange.Style.Fill.BackgroundColor = XLColor.LightGray;
                     totalRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
                     totalRange.Style.Border.BottomBorder = XLBorderStyleValues.Double;
-                    worksheet.Cell(totalRow, 3).Style.NumberFormat.Format = "#,##0";
                     worksheet.Cell(totalRow, 4).Style.NumberFormat.Format = "#,##0";
                     worksheet.Cell(totalRow, 5).Style.NumberFormat.Format = "#,##0";
-                    worksheet.Cell(totalRow, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    worksheet.Cell(totalRow, 6).Style.NumberFormat.Format = "#,##0";
                     worksheet.Cell(totalRow, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                     worksheet.Cell(totalRow, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    worksheet.Cell(totalRow, 6).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
                     // Auto-fit columns
                     worksheet.Columns().AdjustToContents();
@@ -367,7 +368,7 @@ namespace Service
             }
         }
 
-        public async Task<IEnumerable<ProductDailyReportDto>> GetIncompleteOrderShipmentReportAsync(DateTime startDate, DateTime endDate)
+        public async Task<IEnumerable<DashboardSummaryDto>> GetIncompleteOrderShipmentReportAsync(DateTime startDate, DateTime endDate)
         {
             _logger.LogInfo($"Fetching Incomplete Order Shipment Report from {startDate} to {endDate}");
 
@@ -384,12 +385,12 @@ namespace Service
                         command.Parameters.Add(new MySqlParameter("@p_start_date", startDate));
                         command.Parameters.Add(new MySqlParameter("@p_end_date", endDate));
 
-                        var reports = new List<ProductDailyReportDto>();
+                        var reports = new List<DashboardSummaryDto>();
                         using (var reader = await command.ExecuteReaderAsync())
                         {
                             while (await reader.ReadAsync())
                             {
-                                reports.Add(new ProductDailyReportDto
+                                reports.Add(new DashboardSummaryDto
                                 {
                                     Date = reader.IsDBNull(reader.GetOrdinal("Date")) ? "" : reader.GetString("Date"),
                                     LicensePlate = reader.GetString("LicensePlate"),
@@ -546,7 +547,9 @@ namespace Service
                                     DistributorName = reader.GetString("DistributorName"),
                                     ProductName = reader.GetString("ProductName"),
                                     ExportPeriod = reader.GetString("ExportPeriod"),
+                                    MonthlyUnits = reader.GetInt32("MonthlyUnits"),
                                     CumulativeUnits = reader.GetInt32("CumulativeUnits"),
+                                    MonthlyWeight = reader.GetDecimal("MonthlyWeight"),
                                     CumulativeWeight = reader.GetDecimal("CumulativeWeight")
                                 });
                             }
@@ -571,7 +574,7 @@ namespace Service
         }
 
         public async Task<byte[]> ExportAgentProductionReportAsync(
-            int? fromYear = null, int? toYear = null, int? fromMonth = null, int? toMonth = null, int? distributorId = null, int? productInformationId = null)
+    int? fromYear = null, int? toYear = null, int? fromMonth = null, int? toMonth = null, int? distributorId = null, int? productInformationId = null)
         {
             var data = await GetAgentProductionReportAsync(fromYear, toYear, fromMonth, toMonth, distributorId, productInformationId);
             if (data == null)
@@ -580,105 +583,62 @@ namespace Service
                 return null; // Trả về null nếu không có dữ liệu hoặc lỗi
             }
 
+            // Đường dẫn tới file template
+            string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "XuatBaoCaoTheoNhaPhanPhoi.xlsx");
+
             try
             {
-                using (var workbook = new XLWorkbook())
+                using (var workbook = new XLWorkbook(templatePath)) // Sử dụng template có sẵn
                 {
-                    var worksheet = workbook.Worksheets.Add("Distributor Production Report");
+                    var worksheet = workbook.Worksheet(1); // Lấy sheet đầu tiên
 
-                    // Tiêu đề công ty
-                    worksheet.Cell("A2").Value = "CÔNG TY CỔ PHẦN PHÂN BÓN HÀ LAN";
-                    worksheet.Cell("A2").Style.Font.Bold = true;
-                    worksheet.Cell("A2").Style.Font.FontSize = 14;
-                    worksheet.Cell("A2").Style.Font.FontColor = XLColor.Red;
-
-                    // Tiêu đề báo cáo
-                    worksheet.Cell("A3").Value = "BÁO CÁO SẢN LƯỢNG NHÀ PHÂN PHỐI THEO LUỸ KẾT";
-                    worksheet.Cell("A3").Style.Font.Bold = true;
-                    worksheet.Cell("A3").Style.Font.FontSize = 12;
-
-                    // Dòng thông tin thời gian (nếu có)
-                    int currentHeaderRow = 4;
+                    // Fill thông tin thời gian (dòng 2)
                     if (fromYear.HasValue && toYear.HasValue && fromMonth.HasValue && toMonth.HasValue)
                     {
-                        worksheet.Cell($"A{currentHeaderRow}").Value = $"Từ: {fromMonth:D2}/{fromYear} Đến: {toMonth:D2}/{toYear}";
-                        worksheet.Cell($"A{currentHeaderRow}").Style.Font.FontSize = 10;
-                        currentHeaderRow++;
+                        worksheet.Cell("B2").Value = $"Từ ngày: {fromMonth:D2}/{fromYear}";
+                        worksheet.Cell("D2").Value = $"đến ngày: {toMonth:D2}/{toYear}";
                     }
                     else if (fromYear.HasValue && toYear.HasValue)
                     {
-                        worksheet.Cell($"A{currentHeaderRow}").Value = $"Từ Năm: {fromYear} Đến Năm: {toYear}";
-                        worksheet.Cell($"A{currentHeaderRow}").Style.Font.FontSize = 10;
-                        currentHeaderRow++;
+                        worksheet.Cell("B2").Value = $"Từ năm: {fromYear}";
+                        worksheet.Cell("D2").Value = $"đến năm: {toYear}";
                     }
                     else if (fromYear.HasValue)
                     {
-                        worksheet.Cell($"A{currentHeaderRow}").Value = $"Từ Năm: {fromYear}";
-                        worksheet.Cell($"A{currentHeaderRow}").Style.Font.FontSize = 10;
-                        currentHeaderRow++;
+                        worksheet.Cell("B2").Value = $"Từ năm: {fromYear}";
                     }
                     else if (toYear.HasValue)
                     {
-                        worksheet.Cell($"A{currentHeaderRow}").Value = $"Đến Năm: {toYear}";
-                        worksheet.Cell($"A{currentHeaderRow}").Style.Font.FontSize = 10;
-                        currentHeaderRow++;
+                        worksheet.Cell("D2").Value = $"Đến năm: {toYear}";
                     }
 
-                    // Thêm thông tin lọc (nếu có)
-                    if (distributorId.HasValue)
-                    {
-                        worksheet.Cell($"A{currentHeaderRow}").Value = $"Nhà Phân Phối: {distributorId.Value}";
-                        worksheet.Cell($"A{currentHeaderRow}").Style.Font.FontSize = 10;
-                        currentHeaderRow++;
-                    }
-                    if (productInformationId.HasValue)
-                    {
-                        worksheet.Cell($"A{currentHeaderRow}").Value = $"Sản Phẩm: {productInformationId.Value}";
-                        worksheet.Cell($"A{currentHeaderRow}").Style.Font.FontSize = 10;
-                        currentHeaderRow++;
-                    }
-
-                    // Dòng trống để căn chỉnh
-                    worksheet.Row(currentHeaderRow + 1).Height = 20;
-
-                    // Tiêu đề cột
-                    var headerRow = worksheet.Row(currentHeaderRow + 2);
-                    headerRow.Cell(1).Value = "Nhà Phân Phối";
-                    headerRow.Cell(2).Value = "Sản Phẩm";
-                    headerRow.Cell(3).Value = "Tháng/Năm";
-                    headerRow.Cell(4).Value = "Số Lượng (Bao)";
-                    headerRow.Cell(5).Value = "Trọng Lượng (kg)";
-
-                    headerRow.Style.Font.Bold = true;
-                    headerRow.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                    headerRow.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-                    headerRow.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-
-                    // Ghi dữ liệu
-                    int currentRow = currentHeaderRow + 3;
+                    // Fill dữ liệu từ dòng 5 (dựa trên mẫu)
+                    int currentRow = 6;
                     foreach (var item in data)
                     {
-                        worksheet.Cell(currentRow, 1).Value = item.DistributorName;
-                        worksheet.Cell(currentRow, 2).Value = item.ProductName;
-                        worksheet.Cell(currentRow, 3).Value = item.ExportPeriod;
-                        worksheet.Cell(currentRow, 4).Value = item.CumulativeUnits;
-                        worksheet.Cell(currentRow, 5).Value = item.CumulativeWeight;
+                        worksheet.Cell(currentRow, 1).Value = item.DistributorName; // Tên Đại Lý
+                        worksheet.Cell(currentRow, 2).Value = item.ProductName;     // Sản Phẩm
+                        worksheet.Cell(currentRow, 3).Value = item.ExportPeriod;    // Tháng/Năm
+                        worksheet.Cell(currentRow, 4).Value = item.CumulativeUnits; // Số lượng
+                        worksheet.Cell(currentRow, 5).Value = item.CumulativeWeight;// Luỹ Kế (Trọng lượng)
 
                         // Định dạng số
-                        worksheet.Cell(currentRow, 4).Style.NumberFormat.Format = "#,##0";
-                        worksheet.Cell(currentRow, 5).Style.NumberFormat.Format = "#,##0.00"; // Trọng lượng với 2 chữ số thập phân
+                        worksheet.Cell(currentRow, 4).Style.NumberFormat.Format = "#,##0";       // Số lượng (bao)
+                        worksheet.Cell(currentRow, 5).Style.NumberFormat.Format = "#,##0.00";    // Trọng lượng (kg, 2 chữ số thập phân)
 
-                        // Căn giữa các cột số
+                        // Căn giữa tất cả các cột
                         var range = worksheet.Range(currentRow, 1, currentRow, 5);
+                        range.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                        // Viền
                         range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
                         range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-                        worksheet.Range(currentRow, 3, currentRow, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
                         currentRow++;
                     }
 
                     // Điều chỉnh độ rộng cột
-                    worksheet.Columns().AdjustToContents();
+                    worksheet.Columns(1, 5).AdjustToContents();
 
                     // Xuất file
                     using (var stream = new MemoryStream())
@@ -754,8 +714,8 @@ namespace Service
         }
 
         public async Task<byte[]> ExportRegionProductionReportAsync(
-            int? fromYear = null, int? toYear = null, int? fromMonth = null, int? toMonth = null,
-            int? productInformationId = null, int? areaId = null)
+    int? fromYear = null, int? toYear = null, int? fromMonth = null, int? toMonth = null,
+    int? productInformationId = null, int? areaId = null)
         {
             var data = await GetRegionProductionReportAsync(fromYear, toYear, fromMonth, toMonth, productInformationId, areaId);
             if (data == null)
@@ -764,114 +724,62 @@ namespace Service
                 return null; // Trả về null nếu không có dữ liệu hoặc lỗi
             }
 
+            // Đường dẫn tới file template
+            string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "XuatBaoCaoTheoVung.xlsx");
+
             try
             {
-                using (var workbook = new XLWorkbook())
+                using (var workbook = new XLWorkbook(templatePath)) // Sử dụng template có sẵn
                 {
-                    var worksheet = workbook.Worksheets.Add("Region Production Report");
+                    var worksheet = workbook.Worksheet(1); // Lấy sheet đầu tiên
 
-                    // Tiêu đề công ty
-                    worksheet.Cell("A2").Value = "CÔNG TY CỔ PHẦN PHÂN BÓN HÀ LAN";
-                    worksheet.Cell("A2").Style.Font.Bold = true;
-                    worksheet.Cell("A2").Style.Font.FontSize = 14;
-                    worksheet.Cell("A2").Style.Font.FontColor = XLColor.Red;
-
-                    // Tiêu đề báo cáo
-                    worksheet.Cell("A3").Value = "BÁO CÁO SẢN LƯỢNG THEO KHU VỰC THEO LUỸ KẾT";
-                    worksheet.Cell("A3").Style.Font.Bold = true;
-                    worksheet.Cell("A3").Style.Font.FontSize = 12;
-
-                    // Dòng thông tin thời gian và khu vực (nếu có)
-                    int currentHeaderRow = 4;
+                    // Fill thông tin thời gian (dòng 2)
                     if (fromYear.HasValue && toYear.HasValue && fromMonth.HasValue && toMonth.HasValue)
                     {
-                        worksheet.Cell($"A{currentHeaderRow}").Value = $"Từ: {fromMonth:D2}/{fromYear} Đến: {toMonth:D2}/{toYear}";
-                        worksheet.Cell($"A{currentHeaderRow}").Style.Font.FontSize = 10;
-                        currentHeaderRow++;
+                        worksheet.Cell("B2").Value = $"Từ ngày: {fromMonth:D2}/{fromYear}";
+                        worksheet.Cell("D2").Value = $"đến ngày: {toMonth:D2}/{toYear}";
                     }
                     else if (fromYear.HasValue && toYear.HasValue)
                     {
-                        worksheet.Cell($"A{currentHeaderRow}").Value = $"Từ Năm: {fromYear} Đến Năm: {toYear}";
-                        worksheet.Cell($"A{currentHeaderRow}").Style.Font.FontSize = 10;
-                        currentHeaderRow++;
+                        worksheet.Cell("B2").Value = $"Từ năm: {fromYear}";
+                        worksheet.Cell("D2").Value = $"đến năm: {toYear}";
                     }
                     else if (fromYear.HasValue)
                     {
-                        worksheet.Cell($"A{currentHeaderRow}").Value = $"Từ Năm: {fromYear}";
-                        worksheet.Cell($"A{currentHeaderRow}").Style.Font.FontSize = 10;
-                        currentHeaderRow++;
+                        worksheet.Cell("B2").Value = $"Từ năm: {fromYear}";
                     }
                     else if (toYear.HasValue)
                     {
-                        worksheet.Cell($"A{currentHeaderRow}").Value = $"Đến Năm: {toYear}";
-                        worksheet.Cell($"A{currentHeaderRow}").Style.Font.FontSize = 10;
-                        currentHeaderRow++;
+                        worksheet.Cell("D2").Value = $"Đến năm: {toYear}";
                     }
 
-                    if (areaId.HasValue)
-                    {
-                        // Có thể thêm logic để lấy AreaName từ AreaId nếu cần (ở đây tạm thời hiển thị ID)
-                        worksheet.Cell($"A{currentHeaderRow}").Value = $"Khu Vực ID: {areaId.Value}";
-                        worksheet.Cell($"A{currentHeaderRow}").Style.Font.FontSize = 10;
-                        currentHeaderRow++;
-                    }
-
-                    // Thêm thông tin lọc sản phẩm (nếu có)
-                    if (productInformationId.HasValue)
-                    {
-                        worksheet.Cell($"A{currentHeaderRow}").Value = $"Sản Phẩm ID: {productInformationId.Value}";
-                        worksheet.Cell($"A{currentHeaderRow}").Style.Font.FontSize = 10;
-                        currentHeaderRow++;
-                    }
-
-                    // Dòng trống để căn chỉnh
-                    worksheet.Row(currentHeaderRow + 1).Height = 20;
-
-                    // Tiêu đề cột
-                    var headerRow = worksheet.Row(currentHeaderRow + 2);
-                    headerRow.Cell(1).Value = "Khu Vực";
-                    headerRow.Cell(2).Value = "Sản Phẩm";
-                    headerRow.Cell(3).Value = "Tháng/Năm";
-                    headerRow.Cell(4).Value = "Số Lượng (Bao)";
-                    headerRow.Cell(5).Value = "Trọng Lượng (kg)";
-                    headerRow.Cell(6).Value = "Luỹ Kế Số Lượng (Bao)";
-                    headerRow.Cell(7).Value = "Luỹ Kế Trọng Lượng (kg)";
-
-                    headerRow.Style.Font.Bold = true;
-                    headerRow.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                    headerRow.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-                    headerRow.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-
-                    // Ghi dữ liệu
-                    int currentRow = currentHeaderRow + 3;
+                    // Fill dữ liệu từ dòng 5 (dựa trên mẫu)
+                    int currentRow = 6;
                     foreach (var item in data)
                     {
-                        // Dòng dữ liệu tháng
-                        worksheet.Cell(currentRow, 1).Value = item.AreaName;
-                        worksheet.Cell(currentRow, 2).Value = item.ProductName;
-                        worksheet.Cell(currentRow, 3).Value = item.ExportPeriod;
-                        worksheet.Cell(currentRow, 4).Value = item.TotalUnits;
-                        worksheet.Cell(currentRow, 5).Value = item.TotalWeight;
-                        worksheet.Cell(currentRow, 6).Value = item.CumulativeUnits;
-                        worksheet.Cell(currentRow, 7).Value = item.CumulativeWeight;
+                        worksheet.Cell(currentRow, 1).Value = item.AreaName;         // Khu Vực
+                        worksheet.Cell(currentRow, 2).Value = item.ProductName;      // Sản Phẩm
+                        worksheet.Cell(currentRow, 3).Value = item.ExportPeriod;     // Tháng/Năm
+                        worksheet.Cell(currentRow, 4).Value = item.TotalUnits;       // Số lượng trong tháng/năm
+                        worksheet.Cell(currentRow, 5).Value = item.CumulativeWeight; // Luỹ Kế (Trọng lượng)
 
                         // Định dạng số
-                        worksheet.Cell(currentRow, 4).Style.NumberFormat.Format = "#,##0";
-                        worksheet.Cell(currentRow, 5).Style.NumberFormat.Format = "#,##0.00";
-                        worksheet.Cell(currentRow, 6).Style.NumberFormat.Format = "#,##0";
-                        worksheet.Cell(currentRow, 7).Style.NumberFormat.Format = "#,##0.00";
+                        worksheet.Cell(currentRow, 4).Style.NumberFormat.Format = "#,##0";       // Số lượng (bao)
+                        worksheet.Cell(currentRow, 5).Style.NumberFormat.Format = "#,##0.00";    // Trọng lượng (kg, 2 chữ số thập phân)
 
-                        // Căn giữa các cột số
-                        var range = worksheet.Range(currentRow, 1, currentRow, 7);
+                        // Căn giữa tất cả các cột
+                        var range = worksheet.Range(currentRow, 1, currentRow, 5);
+                        range.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                        // Viền
                         range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
                         range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-                        worksheet.Range(currentRow, 4, currentRow, 7).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
                         currentRow++;
                     }
 
                     // Điều chỉnh độ rộng cột
-                    worksheet.Columns().AdjustToContents();
+                    worksheet.Columns(1, 5).AdjustToContents();
 
                     // Xuất file
                     using (var stream = new MemoryStream())

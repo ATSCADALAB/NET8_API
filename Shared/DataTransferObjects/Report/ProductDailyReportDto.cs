@@ -1,6 +1,6 @@
 ﻿namespace Shared.DataTransferObjects.Report
 {
-    public class ProductDailyReportDto
+    public class DashboardSummaryDto
     {
         public string Date { get; set; }
         public string LicensePlate { get; set; }

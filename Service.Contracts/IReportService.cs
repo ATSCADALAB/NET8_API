@@ -7,15 +7,15 @@ namespace Service.Contracts
 {
     public interface IReportService
     {
-        Task<IEnumerable<ProductDailyReportDto>> GetProductDailyReportAsync(
+        Task<IEnumerable<DashboardSummaryDto>> GetProductDailyReportAsync(
             DateTime startDate,
             DateTime endDate,
             int? lineId,
             int? productInformationId);
         Task<byte[]> ExportProductDailyReportAsync(DateTime startDate, DateTime endDate, int? lineId, int? productInformationId);
-        Task<IEnumerable<ProductDailyReportDto>> GetVehicleDailyReportAsync(DateTime startDate, DateTime endDate, string licensePlate = null);
+        Task<IEnumerable<DashboardSummaryDto>> GetVehicleDailyReportAsync(DateTime startDate, DateTime endDate, string licensePlate = null);
         Task<byte[]> ExportVehicleDailyReportAsync(DateTime startDate, DateTime endDate, string licensePlate = null);
-        Task<IEnumerable<ProductDailyReportDto>> GetIncompleteOrderShipmentReportAsync(DateTime startDate, DateTime endDate);
+        Task<IEnumerable<DashboardSummaryDto>> GetIncompleteOrderShipmentReportAsync(DateTime startDate, DateTime endDate);
         Task<byte[]> ExportIncompleteOrderShipmentReportAsync(DateTime startDate, DateTime endDate);
         Task<IEnumerable<AgentProductionReportDto>> GetAgentProductionReportAsync(
             int? fromYear = null, int? toYear = null, int? fromMonth = null, int? toMonth = null, int? distributorId = null, int? productInformationId = null);

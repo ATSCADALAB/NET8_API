@@ -6,6 +6,7 @@ using Shared.DataTransferObjects.Area;
 using Shared.DataTransferObjects.AuditLog;
 using Shared.DataTransferObjects.Authentication;
 using Shared.DataTransferObjects.Category;
+using Shared.DataTransferObjects.Dashboard;
 using Shared.DataTransferObjects.Distributor;
 using Shared.DataTransferObjects.InboundRecord;
 using Shared.DataTransferObjects.Line;
@@ -27,6 +28,44 @@ namespace QuickStart
     {
         public MappingProfile()
         {
+            // OrdersByLineDto: Ánh xạ từ một đối tượng tổng hợp (OrderLineDetail + Line)
+            CreateMap<(OrderLineDetail OrderLineDetail, Line Line), OrdersByLineDto>()
+                .ForMember(dest => dest.LineName, opt => opt.MapFrom(src => src.Line.LineName ?? "Unknown"))
+                .ForMember(dest => dest.TotalOrders, opt => opt.Ignore()); // TotalOrders sẽ được tính trong service
+
+            // OrderStatusTrendDto: Không cần ánh xạ trực tiếp vì là tổng hợp từ Order
+
+            // TopProductDto: Ánh xạ từ một đối tượng tổng hợp (OrderDetail + ProductInformation)
+            CreateMap<(OrderDetail OrderDetail, ProductInformation ProductInfo), TopProductDto>()
+                .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.ProductInfo.ProductName))
+                .ForMember(dest => dest.TotalUnits, opt => opt.Ignore()); // TotalUnits sẽ được tính trong service
+
+            // IncompleteOrderDto: Ánh xạ từ Order với dữ liệu tổng hợp
+            CreateMap<Order, IncompleteOrderDto>()
+                .ForMember(dest => dest.Date, opt => opt.MapFrom(src => src.ExportDate.ToString("yyyy-MM-dd")))
+                .ForMember(dest => dest.OrderNumber, opt => opt.MapFrom(src => src.OrderCode))
+                .ForMember(dest => dest.VehicleNumber, opt => opt.MapFrom(src => src.VehicleNumber ?? "N/A"))
+                .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.OrderDetails.First().ProductInformation.ProductName))
+                .ForMember(dest => dest.RequestedUnits, opt => opt.MapFrom(src => src.OrderDetails.Sum(od => od.RequestedUnits)))
+                .ForMember(dest => dest.ActualUnits, opt => opt.Ignore()) // ActualUnits cần SensorRecords, xử lý trong service
+                .ForMember(dest => dest.CompletionPercentage, opt => opt.Ignore()); // Tính trong service
+
+            // ProcessingOrderDto: Ánh xạ từ Order với dữ liệu tổng hợp
+            CreateMap<(Order Order, OrderLineDetail OrderLineDetail, Line Line), ProcessingOrderDto>()
+                .ForMember(dest => dest.Date, opt => opt.MapFrom(src => src.Order.ExportDate.ToString("yyyy-MM-dd")))
+                .ForMember(dest => dest.OrderNumber, opt => opt.MapFrom(src => src.Order.OrderCode))
+                .ForMember(dest => dest.VehicleNumber, opt => opt.MapFrom(src => src.Order.VehicleNumber ?? "N/A"))
+                .ForMember(dest => dest.LineName, opt => opt.MapFrom(src => src.Line != null ? src.Line.LineName : "Unknown"))
+                .ForMember(dest => dest.TotalUnits, opt => opt.Ignore()) // TotalUnits cần SensorRecords, xử lý trong service
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => "Processing"));
+
+            // RecentCompletedOrderDto: Ánh xạ từ Order với dữ liệu tổng hợp
+            CreateMap<(Order Order, Distributor Distributor, ProductInformation ProductInfo), RecentCompletedOrderDto>()
+                .ForMember(dest => dest.CompletedDate, opt => opt.MapFrom(src => src.Order.ExportDate.ToString("yyyy-MM-dd")))
+                .ForMember(dest => dest.OrderNumber, opt => opt.MapFrom(src => src.Order.OrderCode))
+                .ForMember(dest => dest.DistributorName, opt => opt.MapFrom(src => src.Distributor != null ? src.Distributor.DistributorName : "N/A"))
+                .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.ProductInfo.ProductName))
+                .ForMember(dest => dest.TotalUnits, opt => opt.Ignore()); // TotalUnits
             // Ánh xạ cho Area
             CreateMap<Area, AreaDto>();
             CreateMap<AreaForCreationDto, Area>()
