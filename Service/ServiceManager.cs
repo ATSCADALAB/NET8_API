@@ -17,6 +17,7 @@ namespace Service
     public sealed class ServiceManager : IServiceManager
     {
         private readonly Lazy<IAreaService> _areaService;
+        private readonly Lazy<IReportService> _reportService;
         private readonly Lazy<ILineService> _lineService;
         private readonly Lazy<IDistributorService> _distributorService;
         private readonly Lazy<IProductInformationService> _productInformationService;
@@ -27,6 +28,7 @@ namespace Service
         private readonly Lazy<IProductService> _productService;
         private readonly Lazy<IStockService> _stockService;
         private readonly Lazy<IInboundRecordService> _inboundRecordService;
+        private readonly Lazy<IDashboardService> _dashboardService;
 
         // Các service cũ từ ví dụ của bạn
         private readonly Lazy<ICategoryService> _categoryService;
@@ -50,6 +52,7 @@ namespace Service
             IEmailSender emailSender,
             IHubContext<DataHub> hubContext)
         {
+            _dashboardService = new Lazy<IDashboardService>(() => new DashboardService(repositoryManager, logger, mapper));
             _areaService = new Lazy<IAreaService>(() => new AreaService(repositoryManager, logger, mapper));
             _lineService = new Lazy<ILineService>(() => new LineService(repositoryManager, logger, mapper));
             _distributorService = new Lazy<IDistributorService>(() => new DistributorService(repositoryManager, logger, mapper));
@@ -61,8 +64,7 @@ namespace Service
             _productService = new Lazy<IProductService>(() => new ProductService(repositoryManager, logger, mapper));
             _stockService = new Lazy<IStockService>(() => new StockService(repositoryManager, logger, mapper));
             _inboundRecordService = new Lazy<IInboundRecordService>(() => new InboundRecordService(repositoryManager, logger, mapper));
-
-            // Khởi tạo các service cũ
+            _reportService = new Lazy<IReportService>(() =>  new ReportService(repositoryManager, logger, mapper, configuration));        // Khởi tạo các service cũ
             _categoryService = new Lazy<ICategoryService>(() => new CategoryService(repositoryManager, logger, mapper));
             _permissionService = new Lazy<IPermissionService>(() => new PermissionService(repositoryManager, logger, mapper));
             _rolePermissionService = new Lazy<IRolePermissionService>(() => new RolePermissionService(repositoryManager, logger, mapper));
@@ -75,6 +77,7 @@ namespace Service
             _wcfService = new Lazy<IWcfService>(() => new WcfService(configuration, hubContext));
         }
 
+        public IDashboardService DashboardService => _dashboardService.Value;
         public IAreaService AreaService => _areaService.Value;
         public ILineService LineService => _lineService.Value;
         public IDistributorService DistributorService => _distributorService.Value;
@@ -86,7 +89,7 @@ namespace Service
         public IProductService ProductService => _productService.Value;
         public IStockService StockService => _stockService.Value;
         public IInboundRecordService InboundRecordService => _inboundRecordService.Value;
-
+        public IReportService ReportService => _reportService.Value;
         // Property cho các service cũ
         public ICategoryService CategoryService => _categoryService.Value;
         public IPermissionService PermissionService => _permissionService.Value;

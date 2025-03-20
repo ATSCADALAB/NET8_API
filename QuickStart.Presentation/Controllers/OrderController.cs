@@ -137,9 +137,19 @@ namespace QuickStart.Presentation.Controllers
                                 var requestedUnits = worksheet.Cell(row, 7).GetValue<int>();
                                 var manufactureDateCell = worksheet.Cell(row, 8);
 
-                                DateTime manufactureDate = manufactureDateCell.IsEmpty()
-                                    ? DateTime.Now
-                                    : manufactureDateCell.GetValue<DateTime>();
+                                // Xử lý ManufactureDate: Nếu ô trống hoặc không phải định dạng ngày, đặt là null
+                                DateTime? manufactureDate = null;
+                                if (!manufactureDateCell.IsEmpty())
+                                {
+                                    try
+                                    {
+                                        manufactureDate = manufactureDateCell.GetValue<DateTime>();
+                                    }
+                                    catch (Exception)
+                                    {
+                                        manufactureDate = null; // Nếu không parse được, đặt là null
+                                    }
+                                }
 
                                 if (exportDate == default || string.IsNullOrWhiteSpace(vehicleNumber) ||
                                     string.IsNullOrWhiteSpace(driverName) || string.IsNullOrWhiteSpace(driverPhoneNumber) ||
@@ -152,7 +162,7 @@ namespace QuickStart.Presentation.Controllers
                                 if (!productDict.TryGetValue(productCode, out int productInformationId))
                                     throw new Exception($"Product '{productCode}' not found.");
 
-                                // Kiểm tra trùng lặp
+                                // Kiểm tra trùng lặp, so sánh với manufactureDate là null nếu cần
                                 var isDuplicate = existingOrders.Any(o =>
                                     o.OrderCode == orderCode &&
                                     o.ExportDate == exportDate &&
@@ -162,7 +172,7 @@ namespace QuickStart.Presentation.Controllers
                                     existingOrderDetails.Any(od =>
                                         od.OrderId == o.Id &&
                                         od.ProductInformationId == productInformationId &&
-                                        od.ManufactureDate == manufactureDate &&
+                                        (manufactureDate.HasValue ? od.ManufactureDate == manufactureDate.Value : od.ManufactureDate == null) &&
                                         od.RequestedUnits == requestedUnits));
 
                                 if (isDuplicate)
@@ -176,7 +186,7 @@ namespace QuickStart.Presentation.Controllers
                                 {
                                     OrderCode = orderCode,
                                     ExportDate = exportDate,
-                                    DriverNumber= drivernumber,
+                                    DriverNumber = drivernumber,
                                     VehicleNumber = vehicleNumber,
                                     DriverName = driverName,
                                     DriverPhoneNumber = driverPhoneNumber,
@@ -192,7 +202,7 @@ namespace QuickStart.Presentation.Controllers
                                     ProductInformationId = productInformationId,
                                     RequestedUnits = requestedUnits,
                                     RequestedWeight = requestedWeight,
-                                    ManufactureDate = manufactureDate,
+                                    ManufactureDate = manufactureDate, // Sử dụng DateTime? để hỗ trợ null
                                     DefectiveUnits = 0,
                                     DefectiveWeight = 0,
                                     ReplacedUnits = 0,
