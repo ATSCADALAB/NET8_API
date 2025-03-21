@@ -67,6 +67,7 @@ namespace Service
 
         public async Task<SensorRecordDto> CreateSensorRecordAsync(SensorRecordForCreationDto sensorRecord)
         {
+            //sensorRecord.RecordTime=Datez
             if (sensorRecord == null)
                 throw new ArgumentNullException(nameof(sensorRecord), "SensorRecordForCreationDto cannot be null.");
 

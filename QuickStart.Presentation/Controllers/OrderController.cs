@@ -27,7 +27,7 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpGet("{orderId:guid}", Name = "GetOrderById")]
-        [AuthorizePermission("Orders", "View")]
+        //[AuthorizePermission("Orders", "View")]
         public async Task<IActionResult> GetOrder(Guid orderId)
         {
             var order = await _service.OrderService.GetOrderAsync(orderId, trackChanges: false);
@@ -35,7 +35,7 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpGet("code/{orderCode}")]
-        [AuthorizePermission("Orders", "View")]
+        //[AuthorizePermission("Orders", "View")]
         public async Task<IActionResult> GetOrderByCode(string orderCode)
         {
             var order = await _service.OrderService.GetOrderByCodeAsync(orderCode, trackChanges: false);
@@ -229,7 +229,7 @@ namespace QuickStart.Presentation.Controllers
             }
         }
         [HttpGet("with-details")]
-        [AuthorizePermission("Orders", "View")]
+        //[AuthorizePermission("Orders", "View")]
         public async Task<IActionResult> GetAllOrdersWithDetails()
         {
             var orders = await _service.OrderService.GetAllOrdersAsync(trackChanges: false);

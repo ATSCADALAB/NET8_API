@@ -29,7 +29,7 @@ namespace QuickStart.Service
         {
             _configuration = configuration;
             _hubContext = hubContext;
-            _address = _configuration["WcfService:Address"] ?? "192.168.1.100:8000";
+            _address = _configuration["WcfService:Address"] ?? "192.168.1.29:9000";
             Start();
         }
 
