@@ -19,6 +19,7 @@ namespace Repository
         private readonly Lazy<IProductRepository> _productRepository;
         private readonly Lazy<IStockRepository> _stockRepository;
         private readonly Lazy<IInboundRecordRepository> _inboundRecordRepository;
+        private readonly Lazy<IOutboundRecordRepository> _outboundRecordRepository;
         private readonly Lazy<ICategoryRepository> _categoryRepository;
         private readonly Lazy<IPermissionRepository> _permissionRepository;
         private readonly Lazy<IRolePermissionRepository> _rolePermissionRepository;
@@ -39,6 +40,7 @@ namespace Repository
             _productRepository = new Lazy<IProductRepository>(() => new ProductRepository(repositoryContext));
             _stockRepository = new Lazy<IStockRepository>(() => new StockRepository(repositoryContext));
             _inboundRecordRepository = new Lazy<IInboundRecordRepository>(() => new InboundRecordRepository(repositoryContext));
+            _outboundRecordRepository = new Lazy<IOutboundRecordRepository>(() => new OutboundRecordRepository(repositoryContext));
 
             // Khởi tạo các repository cũ
             _categoryRepository = new Lazy<ICategoryRepository>(() => new CategoryRepository(repositoryContext));
@@ -58,6 +60,7 @@ namespace Repository
         public IProductRepository Product => _productRepository.Value;
         public IStockRepository Stock => _stockRepository.Value;
         public IInboundRecordRepository InboundRecord => _inboundRecordRepository.Value;
+        public IOutboundRecordRepository OutboundRecord => _outboundRecordRepository.Value;
 
         public ICategoryRepository Category => _categoryRepository.Value;
         public IPermissionRepository Permission => _permissionRepository.Value;

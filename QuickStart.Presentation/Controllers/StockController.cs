@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using QuickStart.Presentation.ActionFilters;
 using Service.Contracts;
 using Shared.DataTransferObjects.Stock;
+using System.Threading.Tasks;
 
 namespace QuickStart.Presentation.Controllers
 {
@@ -63,6 +64,30 @@ namespace QuickStart.Presentation.Controllers
         {
             await _service.StockService.DeleteStockAsync(stockId, trackChanges: false);
             return NoContent();
+        }
+
+        [HttpGet("report/daily")]
+        [AuthorizePermission("Stock", "View")]
+        public async Task<IActionResult> GetDailyInventoryReport([FromQuery] DateTime date)
+        {
+            var report = await _service.StockService.GetDailyInventoryReportAsync(date);
+            return Ok(report);
+        }
+
+        [HttpGet("report/monthly")]
+        [AuthorizePermission("Stock", "View")]
+        public async Task<IActionResult> GetMonthlyInventoryReport([FromQuery] int year, [FromQuery] int month)
+        {
+            var report = await _service.StockService.GetMonthlyInventoryReportAsync(year, month);
+            return Ok(report);
+        }
+
+        [HttpGet("report/yearly")]
+        [AuthorizePermission("Stock", "View")]
+        public async Task<IActionResult> GetYearlyInventoryReport([FromQuery] int year)
+        {
+            var report = await _service.StockService.GetYearlyInventoryReportAsync(year);
+            return Ok(report);
         }
     }
 }

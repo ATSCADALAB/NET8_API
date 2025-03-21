@@ -13,6 +13,7 @@
         IProductService ProductService { get; }
         IStockService StockService { get; }
         IInboundRecordService InboundRecordService { get; }
+        IOutboundRecordService OutboundRecordService { get; }
         IReportService ReportService { get; }
         IDashboardService DashboardService { get; }
         // Các property cũ

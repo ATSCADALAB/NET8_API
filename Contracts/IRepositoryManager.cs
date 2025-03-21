@@ -15,6 +15,7 @@ namespace Contracts
         IProductRepository Product { get; } // Đã có trong yêu cầu của bạn
         IStockRepository Stock { get; } // Thêm cho Stock
         IInboundRecordRepository InboundRecord { get; } // Thêm cho InboundRecords
+        IOutboundRecordRepository OutboundRecord { get; } // Thêm cho InboundRecords
 
         IAuditRepository Audit { get; }
         ICategoryRepository Category { get; }

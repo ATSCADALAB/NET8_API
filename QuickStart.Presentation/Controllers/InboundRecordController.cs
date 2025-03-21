@@ -3,12 +3,13 @@ using Microsoft.AspNetCore.Mvc;
 using QuickStart.Presentation.ActionFilters;
 using Service.Contracts;
 using Shared.DataTransferObjects.InboundRecord;
+using System.Threading.Tasks;
 
 namespace QuickStart.Presentation.Controllers
 {
     [Route("api/inbound-records")]
     [ApiController]
-    //[Authorize]
+    [Authorize]
     public class InboundRecordController : ControllerBase
     {
         private readonly IServiceManager _service;
