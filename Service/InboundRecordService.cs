@@ -26,29 +26,25 @@ namespace Service
         public async Task<IEnumerable<InboundRecordDto>> GetAllInboundRecordsAsync(bool trackChanges)
         {
             var inboundRecords = await _repository.InboundRecord.GetAllInboundRecordsAsync(trackChanges);
-            var inboundRecordsDto = _mapper.Map<IEnumerable<InboundRecordDto>>(inboundRecords);
-            return inboundRecordsDto;
+            return _mapper.Map<IEnumerable<InboundRecordDto>>(inboundRecords);
         }
 
         public async Task<InboundRecordDto> GetInboundRecordAsync(int inboundRecordId, bool trackChanges)
         {
             var inboundRecord = await GetInboundRecordAndCheckIfItExists(inboundRecordId, trackChanges);
-            var inboundRecordDto = _mapper.Map<InboundRecordDto>(inboundRecord);
-            return inboundRecordDto;
+            return _mapper.Map<InboundRecordDto>(inboundRecord);
         }
 
         public async Task<IEnumerable<InboundRecordDto>> GetInboundRecordsByProductInformationAsync(int productInformationId, bool trackChanges)
         {
             var inboundRecords = await _repository.InboundRecord.GetInboundRecordsByProductInformationIdAsync(productInformationId, trackChanges);
-            var inboundRecordsDto = _mapper.Map<IEnumerable<InboundRecordDto>>(inboundRecords);
-            return inboundRecordsDto;
+            return _mapper.Map<IEnumerable<InboundRecordDto>>(inboundRecords);
         }
 
         public async Task<IEnumerable<InboundRecordDto>> GetInboundRecordsByDateAsync(DateTime inboundDate, bool trackChanges)
         {
             var inboundRecords = await _repository.InboundRecord.GetInboundRecordsByDateAsync(inboundDate, trackChanges);
-            var inboundRecordsDto = _mapper.Map<IEnumerable<InboundRecordDto>>(inboundRecords);
-            return inboundRecordsDto;
+            return _mapper.Map<IEnumerable<InboundRecordDto>>(inboundRecords);
         }
 
         public async Task<InboundRecordDto> CreateInboundRecordAsync(InboundRecordForCreationDto inboundRecord)
@@ -56,12 +52,31 @@ namespace Service
             if (inboundRecord == null)
                 throw new ArgumentNullException(nameof(inboundRecord), "InboundRecordForCreationDto cannot be null.");
 
-            var inboundRecordEntity = _mapper.Map<InboundRecord>(inboundRecord);
-            _repository.InboundRecord.CreateInboundRecord(inboundRecordEntity);
-            await _repository.SaveAsync();
+            var inboundEntity = _mapper.Map<InboundRecord>(inboundRecord);
+            _repository.InboundRecord.CreateInboundRecord(inboundEntity);
 
-            var inboundRecordToReturn = _mapper.Map<InboundRecordDto>(inboundRecordEntity);
-            return inboundRecordToReturn;
+            // Cập nhật Stock
+            var stock = await _repository.Stock.GetStockByProductInformationIdAsync(inboundRecord.ProductInformationId, true);
+            if (stock == null)
+            {
+                stock = new Stock
+                {
+                    ProductInformationId = inboundRecord.ProductInformationId,
+                    QuantityUnits = inboundRecord.QuantityUnits,
+                    QuantityWeight = inboundRecord.QuantityWeight,
+                    LastUpdated = DateTime.UtcNow
+                };
+                _repository.Stock.CreateStock(stock);
+            }
+            else
+            {
+                stock.QuantityUnits += inboundRecord.QuantityUnits;
+                stock.QuantityWeight += inboundRecord.QuantityWeight;
+                stock.LastUpdated = DateTime.UtcNow;
+            }
+
+            await _repository.SaveAsync();
+            return _mapper.Map<InboundRecordDto>(inboundEntity);
         }
 
         public async Task UpdateInboundRecordAsync(int inboundRecordId, InboundRecordForUpdateDto inboundRecordForUpdate, bool trackChanges)

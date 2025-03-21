@@ -13,6 +13,7 @@ using Shared.DataTransferObjects.Line;
 using Shared.DataTransferObjects.Order;
 using Shared.DataTransferObjects.OrderDetail;
 using Shared.DataTransferObjects.OrderLineDetail;
+using Shared.DataTransferObjects.OutboundRecord;
 using Shared.DataTransferObjects.Permission;
 using Shared.DataTransferObjects.Product;
 using Shared.DataTransferObjects.ProductInformation;
@@ -106,6 +107,17 @@ namespace QuickStart
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.ProductInformation, opt => opt.Ignore());
             CreateMap<InboundRecordForUpdateDto, InboundRecord>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.ProductInformation, opt => opt.Ignore());
+            // Ánh xạ cho OutboundRecord
+            CreateMap<OutboundRecord, OutboundRecordDto>()
+                .ForMember(dest => dest.ProductInformation, opt => opt.MapFrom(src => src.ProductInformation));
+            CreateMap<OutboundRecordForCreationDto, OutboundRecord>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.ProductInformation, opt => opt.Ignore());
+            CreateMap<OutboundRecordForUpdateDto, OutboundRecord>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.ProductInformation, opt => opt.Ignore());
@@ -232,6 +244,16 @@ namespace QuickStart
                 .ForMember(dest => dest.Line, opt => opt.Ignore());
 
             // Ánh xạ cho Stock
+            CreateMap<InboundRecord, InboundRecordDto>()
+                .ForMember(dest => dest.ProductInformation, opt => opt.MapFrom(src => src.ProductInformation));
+            CreateMap<InboundRecordForCreationDto, InboundRecord>();
+            CreateMap<OutboundRecord, OutboundRecordDto>()
+                .ForMember(dest => dest.ProductInformation, opt => opt.MapFrom(src => src.ProductInformation));
+            CreateMap<OutboundRecordForCreationDto, OutboundRecord>();
+            CreateMap<ProductInformation, ProductInformationDto>();
+            CreateMap<Stock, StockDto>();
+            CreateMap<StockForCreationDto, Stock>();
+            CreateMap<StockForUpdateDto, Stock>();
             CreateMap<Stock, StockDto>()
                 .ForMember(dest => dest.ProductInformation, opt => opt.MapFrom(src => src.ProductInformation));
             CreateMap<StockForCreationDto, Stock>()

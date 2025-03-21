@@ -28,6 +28,7 @@ namespace Service
         private readonly Lazy<IProductService> _productService;
         private readonly Lazy<IStockService> _stockService;
         private readonly Lazy<IInboundRecordService> _inboundRecordService;
+        private readonly Lazy<IOutboundRecordService> _outboundRecordService;
         private readonly Lazy<IDashboardService> _dashboardService;
 
         // Các service cũ từ ví dụ của bạn
@@ -64,6 +65,7 @@ namespace Service
             _productService = new Lazy<IProductService>(() => new ProductService(repositoryManager, logger, mapper));
             _stockService = new Lazy<IStockService>(() => new StockService(repositoryManager, logger, mapper));
             _inboundRecordService = new Lazy<IInboundRecordService>(() => new InboundRecordService(repositoryManager, logger, mapper));
+            _outboundRecordService = new Lazy<IOutboundRecordService>(() => new OutboundRecordService(repositoryManager, logger, mapper));
             _reportService = new Lazy<IReportService>(() =>  new ReportService(repositoryManager, logger, mapper, configuration));        // Khởi tạo các service cũ
             _categoryService = new Lazy<ICategoryService>(() => new CategoryService(repositoryManager, logger, mapper));
             _permissionService = new Lazy<IPermissionService>(() => new PermissionService(repositoryManager, logger, mapper));
@@ -89,6 +91,7 @@ namespace Service
         public IProductService ProductService => _productService.Value;
         public IStockService StockService => _stockService.Value;
         public IInboundRecordService InboundRecordService => _inboundRecordService.Value;
+        public IOutboundRecordService OutboundRecordService => _outboundRecordService.Value;
         public IReportService ReportService => _reportService.Value;
         // Property cho các service cũ
         public ICategoryService CategoryService => _categoryService.Value;
