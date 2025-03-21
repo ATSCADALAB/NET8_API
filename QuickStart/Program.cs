@@ -53,20 +53,22 @@ builder.Services.AddScoped<AuthorizePermissionAttribute>(provider =>
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 
 // Đăng ký Background Service cho WCF Polling
-//builder.Services.AddHostedService<WcfPollingService>();
+builder.Services.AddHostedService<WcfPollingService>();
 
 builder.Services.AddControllers()
     .AddApplicationPart(typeof(QuickStart.Presentation.AssemblyReference).Assembly);
 
+//Đọc CORS URL từ appsetting.json 
+var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
-        builder =>
-        {
-            builder.AllowAnyOrigin()
-                   .AllowAnyMethod()
-                   .AllowAnyHeader();
-        });
+        builder => builder
+            .WithOrigins(corsOrigins!)
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials());
+
 });
 
 var app = builder.Build();

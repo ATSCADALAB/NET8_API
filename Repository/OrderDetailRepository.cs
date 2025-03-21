@@ -28,6 +28,8 @@ namespace Repository
         public async Task<IEnumerable<OrderDetail>> GetOrderDetailsByOrderIdAsync(Guid orderId, bool trackChanges) =>
             await FindByCondition(od => od.OrderId == orderId, trackChanges)
                 .Include(od => od.Order)
+                    .ThenInclude(o => o.Distributor)  //Mapping tới Distributor
+                    .ThenInclude(o => o.Area) //Mapping tới Area
                 .Include(od => od.ProductInformation)
                 .ToListAsync();
 
