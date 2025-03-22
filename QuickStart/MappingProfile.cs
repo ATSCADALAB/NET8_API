@@ -194,19 +194,24 @@ namespace QuickStart
             // Ánh xạ cho Product
             CreateMap<Product, ProductDto>()
                 .ForMember(dest => dest.OrderDetail, opt => opt.MapFrom(src => src.OrderDetail))
-                .ForMember(dest => dest.Distributor, opt => opt.MapFrom(src => src.Distributor));
+                .ForMember(dest => dest.Distributor, opt => opt.MapFrom(src => src.Distributor))
+                .ForMember(dest => dest.ProductInformation, opt => opt.MapFrom(src => src.ProductInformation)); // Thêm ánh xạ cho ProductInformation
+
             CreateMap<ProductForCreationDto, Product>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.OrderDetail, opt => opt.Ignore())
-                .ForMember(dest => dest.Distributor, opt => opt.Ignore());
+                .ForMember(dest => dest.Distributor, opt => opt.Ignore())
+                .ForMember(dest => dest.ProductInformation, opt => opt.Ignore()); // Thêm Ignore cho ProductInformation
+
             CreateMap<ProductForUpdateDto, Product>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.OrderDetail, opt => opt.Ignore())
-                .ForMember(dest => dest.Distributor, opt => opt.Ignore());
+                .ForMember(dest => dest.Distributor, opt => opt.Ignore())
+                .ForMember(dest => dest.ProductInformation, opt => opt.Ignore()); // Thêm Ignore cho ProductInformation
 
             // Ánh xạ cho ProductInformation
             CreateMap<ProductInformation, ProductInformationDto>();

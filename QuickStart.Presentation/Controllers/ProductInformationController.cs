@@ -26,7 +26,6 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpGet("{productInformationId:int}", Name = "GetProductInformationById")] 
-        [AuthorizePermission("ProductInformations", "View")]
         public async Task<IActionResult> GetProductInformation(int productInformationId)
         {
             var productInformation = await _service.ProductInformationService.GetProductInformationAsync(productInformationId, trackChanges: false);

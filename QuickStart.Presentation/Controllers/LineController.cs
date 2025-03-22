@@ -16,7 +16,6 @@ namespace QuickStart.Presentation.Controllers
         public LineController(IServiceManager service) => _service = service;
 
         [HttpGet]
-        [AuthorizePermission("Lines", "View")]
         public async Task<IActionResult> GetAllLines()
         {
             var lines = await _service.LineService.GetAllLinesAsync(trackChanges: false);

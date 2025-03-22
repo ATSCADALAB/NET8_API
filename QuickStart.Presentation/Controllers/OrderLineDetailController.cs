@@ -45,5 +45,11 @@ namespace QuickStart.Presentation.Controllers
             var createdOrderLineDetail = await _service.OrderLineDetailService.CreateOrderLineDetailAsync(orderLineDetail);
             return CreatedAtRoute("GetOrderLineDetailById", new { orderLineDetailId = createdOrderLineDetail.Id }, createdOrderLineDetail);
         }
+        [HttpGet("running-orders/{lineId}")]
+        public async Task<IActionResult> GetRunningOrdersByLine(int lineId)
+        {
+            var runningOrders = await _service.OrderLineDetailService.GetRunningOrdersByLineAsync(lineId);
+            return Ok(runningOrders);
+        }
     }
 }

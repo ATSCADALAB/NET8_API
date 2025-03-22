@@ -26,7 +26,6 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpGet("{distributorId:int}", Name = "GetDistributorById")]
-        [AuthorizePermission("Distributors", "View")]
         public async Task<IActionResult> GetDistributor(int distributorId)
         {
             var distributor = await _service.DistributorService.GetDistributorAsync(distributorId, trackChanges: false);
