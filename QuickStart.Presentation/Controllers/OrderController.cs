@@ -282,5 +282,36 @@ namespace QuickStart.Presentation.Controllers
 
             return Ok(result);
         }
+        [HttpGet("by-filter")]
+        [AuthorizePermission("Orders", "View")]
+        public async Task<IActionResult> GetOrdersByFilter(
+            [FromQuery] DateTime startDate, // Bắt buộc
+            [FromQuery] DateTime endDate,   // Bắt buộc
+            [FromQuery] int? distributorId, // Tùy chọn
+            [FromQuery] int? areaId,        // Tùy chọn
+            [FromQuery] int? productInformationId, // Tùy chọn
+            [FromQuery] int? status)        // Tùy chọn
+        {
+            if (startDate == default || endDate == default)
+            {
+                return BadRequest("Start date and end date are required.");
+            }
+
+            if (startDate > endDate)
+            {
+                return BadRequest("Start date must be less than or equal to end date.");
+            }
+
+            var orders = await _service.OrderService.GetOrdersByFilterAsync(
+                startDate,
+                endDate,
+                distributorId,
+                areaId,
+                productInformationId,
+                status,
+                trackChanges: false);
+
+            return Ok(orders);
+        }
     }
 }

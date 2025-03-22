@@ -34,7 +34,7 @@ namespace QuickStart.Service
                     // Bắt đầu polling từ WCF và đẩy qua SignalR
                     await serviceManager.WcfService.StartPollingAsync(new[]
                     { "pbhl_testpbhl_sensor.line_1", "pbhl_testpbhl_sensor.line_2",
-                        "pbhl_testpbhl_sensor.line_3", "pbhl_testpbhl_sensor.line_4" }, 2000);
+                        "pbhl_testpbhl_sensor.line_3", "pbhl_testpbhl_sensor.line_4" }, 500);
                     _logger.LogInformation("WCF polling started successfully.");
                 }
                 catch (Exception ex)
