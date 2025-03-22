@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using QuickStart.Presentation.ActionFilters;
 using Service.Contracts;
 using Shared.DataTransferObjects.Order;
+using Shared.DataTransferObjects.OrderDetail;
 using Shared.DataTransferObjects.OrderLineDetail;
 
 namespace QuickStart.Presentation.Controllers
@@ -44,6 +45,14 @@ namespace QuickStart.Presentation.Controllers
         {
             var createdOrderLineDetail = await _service.OrderLineDetailService.CreateOrderLineDetailAsync(orderLineDetail);
             return CreatedAtRoute("GetOrderLineDetailById", new { orderLineDetailId = createdOrderLineDetail.Id }, createdOrderLineDetail);
+        }
+        [HttpPut("{orderDetailId:int}")]
+        [ServiceFilter(typeof(ValidationFilterAttribute))]
+        [AuthorizePermission("OrderLineDetails", "Update")]
+        public async Task<IActionResult> UpdateOrderDetail(int orderLineDetailId, [FromBody] OrderLineDetailForUpdateDto orderLineDetailForUpdate)
+        {
+            await _service.OrderLineDetailService.UpdateOrderLineDetailAsync(orderLineDetailId, orderLineDetailForUpdate, trackChanges: true);
+            return NoContent();
         }
     }
 }
