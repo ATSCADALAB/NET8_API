@@ -25,7 +25,16 @@ namespace QuickStart.Presentation.Controllers
             var orders = await _service.OrderService.GetAllOrdersAsync(trackChanges: false);
             return Ok(orders);
         }
+        [HttpGet("template")]
+        public IActionResult DownloadOrderTemplate()
+        {
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "Order.xlsx");
+            if (!System.IO.File.Exists(filePath))
+                return NotFound("Template file not found.");
 
+            var fileBytes = System.IO.File.ReadAllBytes(filePath);
+            return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Order.xlsx");
+        }
         [HttpGet("{orderId:guid}", Name = "GetOrderById")]
         //[AuthorizePermission("Orders", "View")]
         public async Task<IActionResult> GetOrder(Guid orderId)

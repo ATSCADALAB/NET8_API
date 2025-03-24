@@ -46,6 +46,7 @@ namespace QuickStart.Presentation.Controllers
             var createdOrderLineDetail = await _service.OrderLineDetailService.CreateOrderLineDetailAsync(orderLineDetail);
             return CreatedAtRoute("GetOrderLineDetailById", new { orderLineDetailId = createdOrderLineDetail.Id }, createdOrderLineDetail);
         }
+
         [HttpPut("{orderLineDetailId:int}")]
         [ServiceFilter(typeof(ValidationFilterAttribute))]
         [AuthorizePermission("OrderLineDetails", "Update")]
@@ -53,6 +54,13 @@ namespace QuickStart.Presentation.Controllers
         {
             await _service.OrderLineDetailService.UpdateOrderLineDetailAsync(orderLineDetailId, orderLineDetailForUpdate, trackChanges: true);
             return NoContent();
+
+        [HttpGet("running-orders/{lineId}")]
+        public async Task<IActionResult> GetRunningOrdersByLine(int lineId)
+        {
+            var runningOrders = await _service.OrderLineDetailService.GetRunningOrdersByLineAsync(lineId);
+            return Ok(runningOrders);
+
         }
     }
 }

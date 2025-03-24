@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
@@ -18,8 +17,7 @@ namespace Entities.Models
         [StringLength(50, MinimumLength = 1)]
         public string TagID { get; set; }
 
-        [Required]
-        public int OrderDetailId { get; set; }
+        public int? OrderDetailId { get; set; } // Nullable vì OrderId có thể null
 
         public DateTime ShipmentDate { get; set; } = DateTime.UtcNow;
 
@@ -28,18 +26,25 @@ namespace Entities.Models
         [Required]
         public int DistributorId { get; set; }
 
+        [Required]
+        public int ProductInformationId { get; set; } // Thêm trường ProductInformationId, bắt buộc
+
         public bool IsActive { get; set; } = true;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        // Mối quan hệ với OrderDetail (many-to-one)
+        // Mối quan hệ với OrderDetail (many-to-one, nullable)
         [ForeignKey(nameof(OrderDetailId))]
         public virtual OrderDetail OrderDetail { get; set; }
 
         // Mối quan hệ với Distributor (many-to-one)
         [ForeignKey(nameof(DistributorId))]
         public virtual Distributor Distributor { get; set; }
+
+        // Mối quan hệ với ProductInformation (many-to-one)
+        [ForeignKey(nameof(ProductInformationId))]
+        public virtual ProductInformation ProductInformation { get; set; }
     }
 }

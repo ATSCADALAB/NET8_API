@@ -26,7 +26,6 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpGet("{productInformationId:int}", Name = "GetProductInformationById")] 
-        [AuthorizePermission("ProductInformations", "View")]
         public async Task<IActionResult> GetProductInformation(int productInformationId)
         {
             var productInformation = await _service.ProductInformationService.GetProductInformationAsync(productInformationId, trackChanges: false);
@@ -65,6 +64,16 @@ namespace QuickStart.Presentation.Controllers
         {
             await _service.ProductInformationService.DeleteProductInformationAsync(productInformationId, trackChanges: false);
             return NoContent();
+        }
+        [HttpGet("template")]
+        public IActionResult DownloadProductInformationTemplate()
+        {
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "Distributor.xlsx");
+            if (!System.IO.File.Exists(filePath))
+                return NotFound("Template file not found.");
+
+            var fileBytes = System.IO.File.ReadAllBytes(filePath);
+            return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Distributor.xlsx");
         }
         [HttpPost("import")]
         [AuthorizePermission("ProductInformations", "Create")]

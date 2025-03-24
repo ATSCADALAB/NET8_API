@@ -17,24 +17,28 @@ namespace Repository
                 .OrderBy(p => p.TagID)
                 .Include(p => p.OrderDetail)
                 .Include(p => p.Distributor)
+                .Include(p => p.ProductInformation) // Thêm Include cho ProductInformation
                 .ToListAsync();
 
         public async Task<Product> GetProductByIdAsync(int productId, bool trackChanges) =>
             await FindByCondition(p => p.Id == productId, trackChanges)
                 .Include(p => p.OrderDetail)
                 .Include(p => p.Distributor)
+                .Include(p => p.ProductInformation) // Thêm Include cho ProductInformation
                 .SingleOrDefaultAsync();
 
         public async Task<Product> GetProductByTagIdAsync(string tagId, bool trackChanges) =>
             await FindByCondition(p => p.TagID == tagId, trackChanges)
                 .Include(p => p.OrderDetail)
                 .Include(p => p.Distributor)
+                .Include(p => p.ProductInformation) // Thêm Include cho ProductInformation
                 .SingleOrDefaultAsync();
 
         public async Task<IEnumerable<Product>> GetProductsByOrderDetailIdAsync(int orderDetailId, bool trackChanges) =>
             await FindByCondition(p => p.OrderDetailId == orderDetailId, trackChanges)
                 .Include(p => p.OrderDetail)
                 .Include(p => p.Distributor)
+                .Include(p => p.ProductInformation) // Thêm Include cho ProductInformation
                 .OrderBy(p => p.TagID)
                 .ToListAsync();
 
@@ -42,6 +46,15 @@ namespace Repository
             await FindByCondition(p => p.DistributorId == distributorId, trackChanges)
                 .Include(p => p.OrderDetail)
                 .Include(p => p.Distributor)
+                .Include(p => p.ProductInformation) // Thêm Include cho ProductInformation
+                .OrderBy(p => p.TagID)
+                .ToListAsync();
+
+        public async Task<IEnumerable<Product>> GetProductsByProductInformationIdAsync(int productInformationId, bool trackChanges) =>
+            await FindByCondition(p => p.ProductInformationId == productInformationId, trackChanges)
+                .Include(p => p.OrderDetail)
+                .Include(p => p.Distributor)
+                .Include(p => p.ProductInformation) // Thêm Include cho ProductInformation
                 .OrderBy(p => p.TagID)
                 .ToListAsync();
 

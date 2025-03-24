@@ -60,7 +60,7 @@ namespace Service
             _productInformationService = new Lazy<IProductInformationService>(() => new ProductInformationService(repositoryManager, logger, mapper));
             _orderService = new Lazy<IOrderService>(() => new OrderService(repositoryManager, logger, mapper,configuration));
             _orderDetailService = new Lazy<IOrderDetailService>(() => new OrderDetailService(repositoryManager, logger, mapper));
-            _orderLineDetailService = new Lazy<IOrderLineDetailService>(() => new OrderLineDetailService(repositoryManager, logger, mapper));
+            _orderLineDetailService = new Lazy<IOrderLineDetailService>(() => new OrderLineDetailService(repositoryManager, logger, mapper,configuration));
             _sensorRecordService = new Lazy<ISensorRecordService>(() => new SensorRecordService(repositoryManager, logger, mapper));
             _productService = new Lazy<IProductService>(() => new ProductService(repositoryManager, logger, mapper));
             _stockService = new Lazy<IStockService>(() => new StockService(repositoryManager, logger, mapper));

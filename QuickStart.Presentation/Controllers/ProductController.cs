@@ -56,8 +56,8 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpPost]
-        [ServiceFilter(typeof(ValidationFilterAttribute))]
-        [AuthorizePermission("Products", "Create")]
+        //[ServiceFilter(typeof(ValidationFilterAttribute))]
+        //[AuthorizePermission("Products", "Create")]
         public async Task<IActionResult> CreateProduct([FromBody] ProductForCreationDto product)
         {
             var createdProduct = await _service.ProductService.CreateProductAsync(product);
