@@ -85,7 +85,7 @@ namespace Service
                                         ProductName = reader.GetString("ProductName"),
                                         RequestedUnits = reader.GetInt32("RequestedUnits"),
                                         RequestedWeight = reader.GetDecimal("RequestedWeight"),
-                                        ManufactureDate = reader.GetDateTime("ManufactureDate"), // Không null theo DTO mới
+                                        ManufactureDate = reader.IsDBNull(reader.GetOrdinal("ManufactureDate")) ? null : reader.GetDateTime("ManufactureDate"),
                                         DefectiveUnits = reader.GetInt32("DefectiveUnits"),
                                         DefectiveWeight = reader.GetDecimal("DefectiveWeight"),
                                         ReplacedUnits = reader.GetInt32("ReplacedUnits"),

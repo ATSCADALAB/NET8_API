@@ -181,7 +181,9 @@ namespace QuickStart.Presentation.Controllers
                                     existingOrderDetails.Any(od =>
                                         od.OrderId == o.Id &&
                                         od.ProductInformationId == productInformationId &&
-                                        (manufactureDate.HasValue ? od.ManufactureDate == manufactureDate.Value : od.ManufactureDate == null) &&
+                                        (manufactureDate.HasValue 
+                                            ? od.ManufactureDate == manufactureDate.Value 
+                                            : (od.ManufactureDate == null || od.ManufactureDate == DateTime.MinValue)) &&
                                         od.RequestedUnits == requestedUnits));
 
                                 if (isDuplicate)
@@ -246,50 +248,6 @@ namespace QuickStart.Presentation.Controllers
             {
                 return BadRequest($"Error importing orders: {ex.Message} - StackTrace: {ex.StackTrace}");
             }
-        }
-        [HttpGet("with-details")]
-        //[AuthorizePermission("Orders", "View")]
-        public async Task<IActionResult> GetAllOrdersWithDetails()
-        {
-            var orders = await _service.OrderService.GetAllOrdersAsync(trackChanges: false);
-            var orderDetails = await _service.OrderDetailService.GetAllOrderDetailsAsync(trackChanges: false);
-
-            var result = orders.Select(order => new OrderWithDetailsDto
-            {
-                Id = order.Id,
-                OrderCode = order.OrderCode,
-                ExportDate = order.ExportDate,
-                VehicleNumber = order.VehicleNumber,
-                DriverName = order.DriverName,
-                DriverNumber = order.DriverNumber,
-                DriverPhoneNumber = order.DriverPhoneNumber,
-                Status = order.Status,
-                DistributorId = order.DistributorId,
-                DistributorName = _service.DistributorService.GetDistributorAsync(order.DistributorId, false).Result.DistributorName,
-                Area = _service.DistributorService.GetDistributorAsync(order.DistributorId, false).Result.Area.AreaName,
-                CreatedAt = order.CreatedAt,
-                UpdatedAt = order.UpdatedAt,
-                OrderDetail = orderDetails
-                    .Where(od => od.OrderId == order.Id)
-                    .Select(od => new OrderDetailWithProductDto
-                    {
-                        Id = od.Id,
-                        OrderId = od.OrderId,
-                        ProductInformationId = od.ProductInformationId,
-                        ProductCode = _service.ProductInformationService.GetProductInformationAsync(od.ProductInformationId, false).Result.ProductCode,
-                        ProductName = _service.ProductInformationService.GetProductInformationAsync(od.ProductInformationId, false).Result.ProductName,
-                        RequestedUnits = od.RequestedUnits,
-                        RequestedWeight = od.RequestedWeight,
-                        ManufactureDate = od.ManufactureDate,
-                        DefectiveUnits = od.DefectiveUnits,
-                        DefectiveWeight = od.DefectiveWeight,
-                        ReplacedUnits = od.ReplacedUnits,
-                        ReplacedWeight = od.ReplacedWeight,
-                        CreatedAt = od.CreatedAt
-                    }).FirstOrDefault() // Chỉ lấy bản ghi đầu tiên (1-1)
-            }).ToList();
-
-            return Ok(result);
         }
         [HttpGet("by-filter")]
         [AuthorizePermission("Orders", "View")]

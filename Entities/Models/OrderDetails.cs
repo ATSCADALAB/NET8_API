@@ -25,7 +25,7 @@ namespace Entities.Models
         [Column(TypeName = "decimal(10,2)")]
         public decimal RequestedWeight { get; set; } = 0m;
 
-        public DateTime ManufactureDate { get; set; }
+        public DateTime? ManufactureDate { get; set; }
 
         public int DefectiveUnits { get; set; } = 0;
 
