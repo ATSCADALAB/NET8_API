@@ -12,6 +12,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Service.Contracts;
+using Microsoft.Extensions.Caching.Memory;
+using System.Net.Http;
+using Org.BouncyCastle.Asn1.Ocsp;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using Shared.DataTransferObjects.Wcf;
 
 namespace QuickStart.Service
 {
@@ -22,14 +28,20 @@ namespace QuickStart.Service
         private ChannelFactory<IATSCADAService> _channelFactory;
         private IATSCADAService _channel;
         private CancellationTokenSource _cts;
+        private readonly IMemoryCache _cache;
+        private readonly IHttpClientFactory _httpClientFactory;
         private bool _isPolling;
         private string _address;
+        private string _addressIWebAPI;
 
-        public WcfService(IConfiguration configuration, IHubContext<DataHub> hubContext)
+        public WcfService(IConfiguration configuration, IHubContext<DataHub> hubContext, IMemoryCache cache, IHttpClientFactory httpClientFactory)
         {
             _configuration = configuration;
             _hubContext = hubContext;
+            _cache = cache;
+            _httpClientFactory = httpClientFactory;
             _address = _configuration["WcfService:Address"] ?? "113.161.76.105:9002";
+            _addressIWebAPI = _configuration["WcfService:AddressIWebAPI"] ?? "http://113.161.76.105:9006/api/atscada";
             Start();
         }
 
@@ -136,5 +148,35 @@ namespace QuickStart.Service
             _channelFactory.Close();
             IsActive = false;
         }
+
+        public async Task StartResetValue(IEnumerable<WcfDataForUpdateDto> requestList)
+        {
+            try
+            {
+                // Lấy token từ cache (đã lưu khi login)
+                if (!_cache.TryGetValue("IWebAPIToken", out string? tokenIWebAPI) || string.IsNullOrEmpty(tokenIWebAPI))
+                {
+                    throw new UnauthorizedAccessException("Token không tồn tại hoặc đã hết hạn.");
+                }
+
+                using var httpClient = _httpClientFactory.CreateClient();
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenIWebAPI);
+
+                var response = await httpClient.PutAsJsonAsync($"{_addressIWebAPI}", requestList);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await response.Content.ReadAsStringAsync();
+                    throw new Exception($"Lỗi cập nhật dữ liệu: {errorMessage}");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Ghi log lỗi
+                Console.WriteLine($"Lỗi trong StartResetValue: {ex.Message}");
+                throw; // Ném lại lỗi để Controller xử lý
+            }
+        }
+
     }
 }
