@@ -1,4 +1,5 @@
-﻿using Shared.DataTransferObjects.Order;
+﻿using Microsoft.AspNetCore.Http;
+using Shared.DataTransferObjects.Order;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -23,5 +24,6 @@ namespace Service.Contracts
             int? productInformationId, // Nếu null thì lấy tất cả
             int? status,        // Nếu null thì lấy tất cả
             bool trackChanges);
+        Task<ImportResult> ImportOrdersFromExcelAsync(IFormFile file);
     }
 }

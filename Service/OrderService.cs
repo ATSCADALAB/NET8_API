@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
+using ClosedXML.Excel;
 using Contracts;
 using Entities.Exceptions.Order;
 using Entities.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using MySqlConnector;
 using Service.Contracts;
@@ -25,6 +27,146 @@ namespace Service
             _logger = logger;
             _mapper = mapper;
             _connectionString = configuration.GetConnectionString("sqlConnection");
+        }
+        public async Task<ImportResult> ImportOrdersFromExcelAsync(IFormFile file)
+        {
+            var errors = new List<string>();
+            var skippedRows = new List<string>();
+            var successCount = 0;
+
+            try
+            {
+                // Lấy tất cả distributors và products một lần
+                var allDistributors = await _repository.Distributor.GetAllDistributorsAsync(false);
+                var allProducts = await _repository.ProductInformation.GetAllProductInformationsAsync(false);
+
+                using (var stream = new MemoryStream())
+                {
+                    await file.CopyToAsync(stream);
+                    using (var workbook = new XLWorkbook(stream))
+                    {
+                        var worksheet = workbook.Worksheet(1);
+                        if (worksheet == null)
+                            throw new Exception("Excel file has no valid worksheet.");
+
+                        var rowCount = worksheet.RowsUsed().Count();
+                        if (rowCount < 2)
+                            throw new Exception("Excel file is empty or has no data rows.");
+
+                        using (var connection = new MySqlConnection(_connectionString))
+                        {
+                            await connection.OpenAsync();
+
+                            // Xử lý từng dòng Excel
+                            for (int row = 4; row <= rowCount + 2; row++)
+                            {
+                                try
+                                {
+                                    using (var command = connection.CreateCommand())
+                                    {
+                                        command.CommandText = "sp_ImportOrder";
+                                        command.CommandType = System.Data.CommandType.StoredProcedure;
+
+                                        var orderCode = worksheet.Cell(row, 2).GetValue<string>()?.Trim();
+                                        if (string.IsNullOrWhiteSpace(orderCode))
+                                            throw new Exception("OrderCode is missing.");
+
+                                        var exportDate = worksheet.Cell(row, 1).GetValue<DateTime>();
+                                        var drivernumber = worksheet.Cell(row, 3).GetValue<int>();
+                                        var vehicleNumber = worksheet.Cell(row, 9).GetValue<string>()?.Trim();
+                                        var driverName = worksheet.Cell(row, 12).GetValue<string>()?.Trim().Replace("_x000D_", "").Trim();
+                                        var driverPhoneNumber = worksheet.Cell(row, 13).GetValue<string>()?.Trim();
+                                        var distributorName = worksheet.Cell(row, 14).GetValue<string>()?.Trim();
+                                        var productCode = worksheet.Cell(row, 4).GetValue<string>()?.Trim();
+                                        var requestedWeight = worksheet.Cell(row, 6).GetValue<decimal>();
+                                        var requestedUnits = worksheet.Cell(row, 7).GetValue<int>();
+
+                                        DateTime? manufactureDate = null;
+                                        var manufactureDateCell = worksheet.Cell(row, 8);
+                                        if (!manufactureDateCell.IsEmpty())
+                                        {
+                                            try
+                                            {
+                                                manufactureDate = manufactureDateCell.GetValue<DateTime>();
+                                                if (manufactureDate == DateTime.MinValue)
+                                                    manufactureDate = null;
+                                            }
+                                            catch
+                                            {
+                                                manufactureDate = null;
+                                            }
+                                        }
+
+                                        // Validate dữ liệu
+                                        if (exportDate == default || string.IsNullOrWhiteSpace(vehicleNumber) ||
+                                            string.IsNullOrWhiteSpace(driverName) || string.IsNullOrWhiteSpace(driverPhoneNumber) ||
+                                            string.IsNullOrWhiteSpace(distributorName))
+                                            throw new Exception("Missing required Order fields.");
+
+                                        // Tìm distributor và product từ cache
+                                        var distributor = allDistributors.FirstOrDefault(d => 
+                                            d.DistributorName.Equals(distributorName, StringComparison.OrdinalIgnoreCase));
+                                        if (distributor == null)
+                                            throw new Exception($"Distributor '{distributorName}' not found.");
+
+                                        var product = allProducts.FirstOrDefault(p => 
+                                            p.ProductCode.Equals(productCode, StringComparison.OrdinalIgnoreCase));
+                                        if (product == null)
+                                            throw new Exception($"Product '{productCode}' not found.");
+
+                                        // Thêm parameters
+                                        command.Parameters.Add(new MySqlParameter("@p_order_code", orderCode));
+                                        command.Parameters.Add(new MySqlParameter("@p_export_date", exportDate));
+                                        command.Parameters.Add(new MySqlParameter("@p_driver_number", drivernumber));
+                                        command.Parameters.Add(new MySqlParameter("@p_vehicle_number", vehicleNumber));
+                                        command.Parameters.Add(new MySqlParameter("@p_driver_name", driverName));
+                                        command.Parameters.Add(new MySqlParameter("@p_driver_phone_number", driverPhoneNumber));
+                                        command.Parameters.Add(new MySqlParameter("@p_distributor_id", distributor.Id));
+                                        command.Parameters.Add(new MySqlParameter("@p_product_information_id", product.Id));
+                                        command.Parameters.Add(new MySqlParameter("@p_requested_units", requestedUnits));
+                                        command.Parameters.Add(new MySqlParameter("@p_requested_weight", requestedWeight));
+                                        command.Parameters.Add(new MySqlParameter("@p_manufacture_date", 
+                                            (object)manufactureDate ?? DBNull.Value));
+
+                                        using (var reader = await command.ExecuteReaderAsync())
+                                        {
+                                            if (await reader.ReadAsync())
+                                            {
+                                                var isDuplicate = reader.GetInt32(0);
+                                                if (isDuplicate == 1)
+                                                {
+                                                    skippedRows.Add($"Row {row}: {reader.GetString(1)}");
+                                                }
+                                                else
+                                                {
+                                                    successCount++;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    errors.Add($"Row {row}: {ex.Message}");
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return new ImportResult
+                {
+                    SuccessCount = successCount,
+                    SkippedCount = skippedRows.Count,
+                    SkippedRows = skippedRows,
+                    Errors = errors
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error importing orders: {ex.Message}");
+                throw new Exception($"Error importing orders: {ex.Message}");
+            }
         }
         public async Task<IEnumerable<OrderWithDetailsDto>> GetOrdersByFilterAsync(
             DateTime startDate,
@@ -112,6 +254,7 @@ namespace Service
                 throw;
             }
         }
+        
         public async Task<IEnumerable<OrderDto>> GetAllOrdersAsync(bool trackChanges)
         {
             var orders = await _repository.Order.GetAllOrdersAsync(trackChanges);
