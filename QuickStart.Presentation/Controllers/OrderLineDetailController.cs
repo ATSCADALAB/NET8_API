@@ -55,6 +55,7 @@ namespace QuickStart.Presentation.Controllers
             await _service.OrderLineDetailService.UpdateOrderLineDetailAsync(orderLineDetailId, orderLineDetailForUpdate, trackChanges: true);
             return NoContent();
 
+        }
         [HttpGet("running-orders/{lineId}")]
         public async Task<IActionResult> GetRunningOrdersByLine(int lineId)
         {
