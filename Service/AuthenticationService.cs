@@ -10,6 +10,9 @@ using Service.Contracts;
 using Service.JwtFeatures;
 using Shared.DataTransferObjects.Authentication;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net.Http.Json;
+using System.Net.Http;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Service
 {
@@ -21,10 +24,12 @@ namespace Service
         private readonly IConfiguration _configuration;
         private readonly JwtHandler _jwtHandler;
         private readonly IEmailSender _emailSender;
-
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IMemoryCache _cache;
         private User? _user;
+        private string _addressIWebAPI;
 
-        public AuthenticationService(ILoggerManager logger, IMapper mapper,
+        public AuthenticationService(ILoggerManager logger, IMapper mapper, IHttpClientFactory httpClientFactory, IMemoryCache cache,
             UserManager<User> userManager, IConfiguration configuration, JwtHandler jwtHandler,
             IEmailSender emailSender)
         {
@@ -34,7 +39,9 @@ namespace Service
             _configuration = configuration;
             _jwtHandler = jwtHandler;
             _emailSender = emailSender;
-
+            _httpClientFactory = httpClientFactory;
+            _cache = cache;
+            _addressIWebAPI = _configuration["WcfService:AddressIWebAPI"] ?? "http://113.161.76.105:9006/api/atscada";
         }
 
         public async Task<RegistrationResponseDto> RegisterUser(UserForRegistrationDto userForRegistration)
@@ -88,7 +95,7 @@ namespace Service
                 return new AuthResponseDto { ErrorMessage = "Invalid Authentication" };
             }
 
-
+            //Tạo token cho hệ thống chính
             var signingCredentials = _jwtHandler.GetSigningCredentials();
             var claims = await _jwtHandler.GetClaims(user);
             var tokenOptions = _jwtHandler.GenerateTokenOptions(signingCredentials, claims);
@@ -96,7 +103,19 @@ namespace Service
 
             await _userManager.ResetAccessFailedCountAsync(user);
 
-            return new AuthResponseDto { IsAuthSuccessful = true, Token = token };
+            // Gửi request đến iWebAPI để lấy token
+            string? tokenIWebAPI = null;
+            using var httpClient = _httpClientFactory.CreateClient();
+            var response = await httpClient.PostAsJsonAsync($"{_addressIWebAPI}/login", userForAuthentication);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var iWebAPIResponse = await response.Content.ReadFromJsonAsync<IWebToken>();
+                tokenIWebAPI = iWebAPIResponse?.Token;
+
+                _cache.Set("IWebAPIToken", tokenIWebAPI, TimeSpan.FromMinutes(60)); // Lưu 30 phút
+            }
+            return new AuthResponseDto { IsAuthSuccessful = true, Token = token, TokenIWebAPI = tokenIWebAPI };
         }
 
 

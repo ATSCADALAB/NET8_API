@@ -1,5 +1,6 @@
 ﻿// QuickStart/Contracts/IWcfService.cs
 using QuickStart.Shared.DataTransferObjects.Wcf;
+using Shared.DataTransferObjects.Wcf;
 using System.Threading.Tasks;
 
 namespace Service.Contracts
@@ -8,6 +9,7 @@ namespace Service.Contracts
     {
         Task<WcfDataDto[]> ReadTagsAsync(string[] tagNames);
         Task StartPollingAsync(string[] tagNames, int intervalMs); // Đọc liên tục và gửi qua SignalR
+        Task StartResetValue(IEnumerable<WcfDataForUpdateDto> requestList);
         Task StopPollingAsync();
     }
 }

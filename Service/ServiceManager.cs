@@ -5,12 +5,14 @@ using Entities.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR; // Dùng cho IHubContext
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using QuickStart.Hubs; // Dùng cho DataHub
 using QuickStart.Service;
 using Service.Contracts;
 using Service.JwtFeatures;
 using System;
+using System.Net.Http;
 
 namespace Service
 {
@@ -30,7 +32,7 @@ namespace Service
         private readonly Lazy<IInboundRecordService> _inboundRecordService;
         private readonly Lazy<IOutboundRecordService> _outboundRecordService;
         private readonly Lazy<IDashboardService> _dashboardService;
-
+        //private readonly Lazy<IHttpClientFactory> _httpClientFactory;
         // Các service cũ từ ví dụ của bạn
         private readonly Lazy<ICategoryService> _categoryService;
         private readonly Lazy<IPermissionService> _permissionService;
@@ -42,6 +44,7 @@ namespace Service
         private readonly Lazy<IAuditService> _auditService;
         private readonly Lazy<IWcfService> _wcfService;
 
+
         public ServiceManager(
             IRepositoryManager repositoryManager,
             ILoggerManager logger,
@@ -51,6 +54,8 @@ namespace Service
             RoleManager<UserRole> roleManager,
             JwtHandler jwtHandler,
             IEmailSender emailSender,
+            IHttpClientFactory httpClientFactory,
+            IMemoryCache cache,
             IHubContext<DataHub> hubContext)
         {
             _dashboardService = new Lazy<IDashboardService>(() => new DashboardService(repositoryManager, logger, mapper));
@@ -58,25 +63,25 @@ namespace Service
             _lineService = new Lazy<ILineService>(() => new LineService(repositoryManager, logger, mapper));
             _distributorService = new Lazy<IDistributorService>(() => new DistributorService(repositoryManager, logger, mapper));
             _productInformationService = new Lazy<IProductInformationService>(() => new ProductInformationService(repositoryManager, logger, mapper));
-            _orderService = new Lazy<IOrderService>(() => new OrderService(repositoryManager, logger, mapper,configuration));
+            _orderService = new Lazy<IOrderService>(() => new OrderService(repositoryManager, logger, mapper, configuration));
             _orderDetailService = new Lazy<IOrderDetailService>(() => new OrderDetailService(repositoryManager, logger, mapper));
-            _orderLineDetailService = new Lazy<IOrderLineDetailService>(() => new OrderLineDetailService(repositoryManager, logger, mapper,configuration));
+            _orderLineDetailService = new Lazy<IOrderLineDetailService>(() => new OrderLineDetailService(repositoryManager, logger, mapper, configuration));
             _sensorRecordService = new Lazy<ISensorRecordService>(() => new SensorRecordService(repositoryManager, logger, mapper));
             _productService = new Lazy<IProductService>(() => new ProductService(repositoryManager, logger, mapper));
             _stockService = new Lazy<IStockService>(() => new StockService(repositoryManager, logger, mapper));
             _inboundRecordService = new Lazy<IInboundRecordService>(() => new InboundRecordService(repositoryManager, logger, mapper));
             _outboundRecordService = new Lazy<IOutboundRecordService>(() => new OutboundRecordService(repositoryManager, logger, mapper));
-            _reportService = new Lazy<IReportService>(() =>  new ReportService(repositoryManager, logger, mapper, configuration));        // Khởi tạo các service cũ
+            _reportService = new Lazy<IReportService>(() => new ReportService(repositoryManager, logger, mapper, configuration));        // Khởi tạo các service cũ
             _categoryService = new Lazy<ICategoryService>(() => new CategoryService(repositoryManager, logger, mapper));
             _permissionService = new Lazy<IPermissionService>(() => new PermissionService(repositoryManager, logger, mapper));
             _rolePermissionService = new Lazy<IRolePermissionService>(() => new RolePermissionService(repositoryManager, logger, mapper));
             _authenticationService = new Lazy<IAuthenticationService>(() => new AuthenticationService(
-                logger, mapper, userManager, configuration, jwtHandler, emailSender));
+                logger, mapper, httpClientFactory,cache, userManager, configuration, jwtHandler, emailSender));
             _authorizationService = new Lazy<IAuthorizationServiceLocal>(() => new AuthorizationService(userManager, repositoryManager, logger));
             _userService = new Lazy<IUserService>(() => new UserService(logger, mapper, userManager));
             _roleService = new Lazy<IRoleService>(() => new RoleService(logger, mapper, roleManager));
             _auditService = new Lazy<IAuditService>(() => new AuditService(repositoryManager, logger, mapper));
-            _wcfService = new Lazy<IWcfService>(() => new WcfService(configuration, hubContext));
+            _wcfService = new Lazy<IWcfService>(() => new WcfService(configuration, hubContext,cache,httpClientFactory));
         }
 
         public IDashboardService DashboardService => _dashboardService.Value;

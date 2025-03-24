@@ -31,6 +31,7 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
     options.SuppressModelStateInvalidFilter = true;
 });
+builder.Services.AddMemoryCache(); //Đăng ký IMemoryCache
 builder.Services.AddScoped<ValidationFilterAttribute>();
 builder.Services.AddAuthentication();
 builder.Services.ConfigureIdentity();
@@ -70,6 +71,7 @@ builder.Services.AddCors(options =>
             .AllowCredentials());
 
 });
+builder.Services.AddHttpClient();
 
 var app = builder.Build();
 

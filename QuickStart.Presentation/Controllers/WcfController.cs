@@ -2,6 +2,12 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using Service.Contracts;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Net.Http;
+using QuickStart.Shared.DataTransferObjects.Wcf;
+using Shared.DataTransferObjects.Wcf;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace QuickStart.Presentation.Controllers
 {
@@ -14,6 +20,7 @@ namespace QuickStart.Presentation.Controllers
         public WcfController(IServiceManager serviceManager)
         {
             _serviceManager = serviceManager;
+
         }
 
         [HttpPost("read")]
@@ -63,5 +70,12 @@ namespace QuickStart.Presentation.Controllers
                 return Ok(new { Status = false });
             }
         }
+        [HttpPut("write-value")]
+        public async Task<IActionResult> UpdateData([FromBody] IEnumerable<WcfDataForUpdateDto> request)
+        {
+            await _serviceManager.WcfService.StartResetValue(request);
+            return Ok();
+        }
+
     }
 }
