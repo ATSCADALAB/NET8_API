@@ -32,7 +32,6 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpGet("tag/{tagId}")]
-        [AuthorizePermission("Products", "View")]
         public async Task<IActionResult> GetProductByTagID(string tagId)
         {
             var product = await _service.ProductService.GetProductByTagIDAsync(tagId, trackChanges: false);

@@ -1,11 +1,12 @@
 ﻿using AutoMapper;
 using Contracts;
-using Entities.Models;
+using Microsoft.Extensions.Configuration;
+using MySqlConnector;
 using Service.Contracts;
 using Shared.DataTransferObjects.Dashboard;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Data;
 using System.Threading.Tasks;
 
 namespace Service
@@ -15,36 +16,48 @@ namespace Service
         private readonly IRepositoryManager _repository;
         private readonly ILoggerManager _logger;
         private readonly IMapper _mapper;
+        private readonly string _connectionString;
 
-        public DashboardService(
-            IRepositoryManager repository,
-            ILoggerManager logger,
-            IMapper mapper)
+        public DashboardService(IRepositoryManager repository, ILoggerManager logger, IMapper mapper, IConfiguration configuration)
         {
             _repository = repository;
             _logger = logger;
             _mapper = mapper;
+            _connectionString = configuration.GetConnectionString("sqlConnection");
+
         }
 
         public async Task<DashboardSummaryDto> GetDashboardSummaryAsync()
         {
             try
             {
-                var today = DateTime.Today;
-                var orders = await _repository.Order.GetAllOrdersAsync(trackChanges: false);
-                var distributors = await _repository.Distributor.GetAllDistributorsAsync(trackChanges: false);
-                var areas = await _repository.Area.GetAllAreasAsync(trackChanges: false);
+                using (var connection = new MySqlConnection(_connectionString))
+                {
+                    await connection.OpenAsync();
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = "GetDashboardSummary";
+                        command.CommandType = CommandType.StoredProcedure;
+                        command.Parameters.AddWithValue("@p_today", DateTime.Today);
 
-                var summary = new DashboardSummaryDto(
-                    TotalOrdersToday: orders.Count(o => o.ExportDate.Date == today),
-                    PendingOrders: orders.Count(o => o.Status == 0 || o.Status == 3), // Pending + Incomplete
-                    CompletedOrdersToday: orders.Count(o => o.Status == 2 && o.ExportDate.Date == today),
-                    TotalDistributors: distributors.Count(d => d.IsActive),
-                    TotalAreas: areas.Count()
-                );
-
-                _logger.LogInfo("Dashboard summary retrieved successfully.");
-                return summary;
+                        using (var reader = await command.ExecuteReaderAsync())
+                        {
+                            if (await reader.ReadAsync())
+                            {
+                                var summary = new DashboardSummaryDto(
+                                    reader.GetInt32("TotalOrdersToday"),
+                                    reader.GetInt32("PendingOrders"),
+                                    reader.GetInt32("CompletedOrdersToday"),
+                                    reader.GetInt32("TotalDistributors"),
+                                    reader.GetInt32("TotalAreas")
+                                );
+                                _logger.LogInfo("Dashboard summary retrieved successfully.");
+                                return summary;
+                            }
+                        }
+                    }
+                }
+                throw new Exception("No data returned from GetDashboardSummary");
             }
             catch (Exception ex)
             {
@@ -57,29 +70,31 @@ namespace Service
         {
             try
             {
-                var orderLineDetails = await _repository.OrderLineDetail.GetAllOrderLineDetailsAsync(trackChanges: false);
-                var orders = await _repository.Order.GetAllOrdersAsync(trackChanges: false);
-                var lines = await _repository.Line.GetAllLinesAsync(trackChanges: false);
+                var result = new List<OrdersByLineDto>();
+                using (var connection = new MySqlConnection(_connectionString))
+                {
+                    await connection.OpenAsync();
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = "GetOrdersByLine";
+                        command.CommandType = CommandType.StoredProcedure;
+                        command.Parameters.AddWithValue("@p_start_date", startDate.HasValue ? startDate : (object)DBNull.Value);
+                        command.Parameters.AddWithValue("@p_end_date", endDate.HasValue ? endDate : (object)DBNull.Value);
 
-                var filteredOrderLines = from ol in orderLineDetails
-                                         join o in orders on ol.OrderId equals o.Id
-                                         where (!startDate.HasValue || o.ExportDate >= startDate) &&
-                                               (!endDate.HasValue || o.ExportDate <= endDate)
-                                         select new { OrderLineDetail = ol, Order = o };
-
-                var ordersByLine = filteredOrderLines
-                    .Join(lines,
-                        ol => ol.OrderLineDetail.LineId,
-                        l => l.Id,
-                        (ol, l) => new { ol.OrderLineDetail.OrderId, LineName = l.LineName ?? "Unknown" })
-                    .GroupBy(x => x.LineName)
-                    .Select(g => new OrdersByLineDto(
-                        LineName: g.Key,
-                        TotalOrders: g.Select(x => x.OrderId).Distinct().Count() // Đếm số đơn hàng duy nhất
-                    ));
-
+                        using (var reader = await command.ExecuteReaderAsync())
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                result.Add(new OrdersByLineDto(
+                                    reader.GetString("LineName"),
+                                    reader.GetInt32("TotalOrders")
+                                ));
+                            }
+                        }
+                    }
+                }
                 _logger.LogInfo("Orders by line retrieved successfully.");
-                return ordersByLine;
+                return result;
             }
             catch (Exception ex)
             {
@@ -92,24 +107,34 @@ namespace Service
         {
             try
             {
-                var orders = await _repository.Order.GetAllOrdersAsync(trackChanges: false);
-                var filteredOrders = orders.Where(o =>
-                    (!startDate.HasValue || o.ExportDate >= startDate) &&
-                    (!endDate.HasValue || o.ExportDate <= endDate));
+                var result = new List<OrderStatusTrendDto>();
+                using (var connection = new MySqlConnection(_connectionString))
+                {
+                    await connection.OpenAsync();
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = "GetOrderStatusTrend";
+                        command.CommandType = CommandType.StoredProcedure;
+                        command.Parameters.AddWithValue("@p_start_date", startDate.HasValue ? startDate : (object)DBNull.Value);
+                        command.Parameters.AddWithValue("@p_end_date", endDate.HasValue ? endDate : (object)DBNull.Value);
 
-                var trend = filteredOrders
-                    .GroupBy(o => o.ExportDate.Date)
-                    .Select(g => new OrderStatusTrendDto(
-                        Date: g.Key.ToString("yyyy-MM-dd"),
-                        Pending: g.Count(o => o.Status == 0),
-                        Processing: g.Count(o => o.Status == 1),
-                        Incomplete: g.Count(o => o.Status == 3),
-                        Completed: g.Count(o => o.Status == 2)
-                    ))
-                    .OrderBy(t => t.Date);
-
+                        using (var reader = await command.ExecuteReaderAsync())
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                result.Add(new OrderStatusTrendDto(
+                                    reader.GetDateTime("Date").ToString(),
+                                    reader.GetInt32("Pending"),
+                                    reader.GetInt32("Processing"),
+                                    reader.GetInt32("Incomplete"),
+                                    reader.GetInt32("Completed")
+                                ));
+                            }
+                        }
+                    }
+                }
                 _logger.LogInfo("Order status trend retrieved successfully.");
-                return trend;
+                return result;
             }
             catch (Exception ex)
             {
@@ -122,36 +147,31 @@ namespace Service
         {
             try
             {
-                var orderDetails = await _repository.OrderDetail.GetAllOrderDetailsAsync(trackChanges: false);
-                var orders = await _repository.Order.GetAllOrdersAsync(trackChanges: false);
-                var sensorRecords = await _repository.SensorRecord.GetAllSensorRecordsAsync(trackChanges: false);
-                var productInfos = await _repository.ProductInformation.GetAllProductInformationsAsync(trackChanges: false);
+                var result = new List<TopProductDto>();
+                using (var connection = new MySqlConnection(_connectionString))
+                {
+                    await connection.OpenAsync();
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = "GetTopProducts";
+                        command.CommandType = CommandType.StoredProcedure;
+                        command.Parameters.AddWithValue("@p_start_date", startDate.HasValue ? startDate : (object)DBNull.Value);
+                        command.Parameters.AddWithValue("@p_end_date", endDate.HasValue ? endDate : (object)DBNull.Value);
 
-                var filteredOrderDetails = from od in orderDetails
-                                           join o in orders on od.OrderId equals o.Id
-                                           where (!startDate.HasValue || o.ExportDate >= startDate) &&
-                                                 (!endDate.HasValue || o.ExportDate <= endDate)
-                                           select od;
-
-                var topProducts = filteredOrderDetails
-                    .Join(productInfos,
-                        od => od.ProductInformationId,
-                        pi => pi.Id,
-                        (od, pi) => new { OrderDetail = od, ProductName = pi.ProductName })
-                    .GroupBy(x => x.ProductName)
-                    .Select(g => new TopProductDto(
-                        ProductName: g.Key,
-                        TotalUnits: g.Sum(x => sensorRecords
-                            .Where(sr => sr.OrderDetailId == x.OrderDetail.Id)
-                            .Sum(sr => sr.SensorUnits) > 0
-                            ? sensorRecords.Where(sr => sr.OrderDetailId == x.OrderDetail.Id).Sum(sr => sr.SensorUnits)
-                            : x.OrderDetail.RequestedUnits)
-                    ))
-                    .OrderByDescending(p => p.TotalUnits)
-                    .Take(5);
-
+                        using (var reader = await command.ExecuteReaderAsync())
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                result.Add(new TopProductDto(
+                                    reader.GetString("ProductName"),
+                                    reader.GetInt32("TotalUnits")
+                                ));
+                            }
+                        }
+                    }
+                }
                 _logger.LogInfo("Top products retrieved successfully.");
-                return topProducts;
+                return result;
             }
             catch (Exception ex)
             {
@@ -164,32 +184,34 @@ namespace Service
         {
             try
             {
-                var orders = await _repository.Order.GetAllOrdersAsync(trackChanges: false);
-                var orderDetails = await _repository.OrderDetail.GetAllOrderDetailsAsync(trackChanges: false);
-                var sensorRecords = await _repository.SensorRecord.GetAllSensorRecordsAsync(trackChanges: false);
-                var productInfos = await _repository.ProductInformation.GetAllProductInformationsAsync(trackChanges: false);
+                var result = new List<IncompleteOrderDto>();
+                using (var connection = new MySqlConnection(_connectionString))
+                {
+                    await connection.OpenAsync();
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = "GetIncompleteOrders";
+                        command.CommandType = CommandType.StoredProcedure;
 
-                var incompleteOrders = from o in orders
-                                       where o.Status != 2 // Lọc các đơn chưa hoàn thành
-                                       join od in orderDetails on o.Id equals od.OrderId
-                                       join pi in productInfos on od.ProductInformationId equals pi.Id
-                                       group new { o, od, pi } by o into g
-                                       select new IncompleteOrderDto(
-                                           Date: g.Key.ExportDate.ToString("yyyy-MM-dd"),
-                                           OrderNumber: g.Key.OrderCode,
-                                           VehicleNumber: g.Key.VehicleNumber ?? "N/A",
-                                           ProductName: g.First().pi.ProductName,
-                                           RequestedUnits: g.Sum(x => x.od.RequestedUnits),
-                                           ActualUnits: sensorRecords
-                                               .Where(sr => sr.OrderId == g.Key.Id)
-                                               .Sum(sr => sr.SensorUnits),
-                                           CompletionPercentage: g.Sum(x => x.od.RequestedUnits) > 0
-                                               ? (decimal)sensorRecords.Where(sr => sr.OrderId == g.Key.Id).Sum(sr => sr.SensorUnits) / g.Sum(x => x.od.RequestedUnits) * 100
-                                               : 0
-                                       );
-
+                        using (var reader = await command.ExecuteReaderAsync())
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                result.Add(new IncompleteOrderDto(
+                                    reader.GetDateTime("Date").ToString(),
+                                    reader.GetString("OrderNumber"),
+                                    reader.GetString("VehicleNumber"),
+                                    reader.GetString("ProductName"),
+                                    reader.GetInt32("RequestedUnits"),
+                                    reader.GetInt32("ActualUnits"),
+                                    reader.GetDecimal("CompletionPercentage")
+                                ));
+                            }
+                        }
+                    }
+                }
                 _logger.LogInfo("Incomplete orders retrieved successfully.");
-                return incompleteOrders;
+                return result;
             }
             catch (Exception ex)
             {
@@ -202,35 +224,33 @@ namespace Service
         {
             try
             {
-                var orders = await _repository.Order.GetAllOrdersAsync(trackChanges: false);
-                var orderDetails = await _repository.OrderDetail.GetAllOrderDetailsAsync(trackChanges: false);
-                var orderLineDetails = await _repository.OrderLineDetail.GetAllOrderLineDetailsAsync(trackChanges: false);
-                var lines = await _repository.Line.GetAllLinesAsync(trackChanges: false);
-                var sensorRecords = await _repository.SensorRecord.GetAllSensorRecordsAsync(trackChanges: false);
+                var result = new List<ProcessingOrderDto>();
+                using (var connection = new MySqlConnection(_connectionString))
+                {
+                    await connection.OpenAsync();
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = "GetProcessingOrders";
+                        command.CommandType = CommandType.StoredProcedure;
 
-                var processingOrders = from o in orders
-                                       where o.Status == 1 // Chỉ lấy đơn đang xử lý
-                                       join od in orderDetails on o.Id equals od.OrderId
-                                       join ol in orderLineDetails on o.Id equals ol.OrderId into ols
-                                       from ol in ols.DefaultIfEmpty()
-                                       join l in lines on ol?.LineId equals l?.Id into ls
-                                       from l in ls.DefaultIfEmpty()
-                                       group new { o, od, LineName = l?.LineName } by o into g
-                                       select new ProcessingOrderDto(
-                                           Date: g.Key.ExportDate.ToString("yyyy-MM-dd"),
-                                           OrderNumber: g.Key.OrderCode,
-                                           VehicleNumber: g.Key.VehicleNumber ?? "N/A",
-                                           LineName: g.First().LineName ?? "Unknown",
-                                           TotalUnits: g.Sum(x => sensorRecords
-                                               .Where(sr => sr.OrderDetailId == x.od.Id)
-                                               .Sum(sr => sr.SensorUnits) > 0
-                                               ? sensorRecords.Where(sr => sr.OrderDetailId == x.od.Id).Sum(sr => sr.SensorUnits)
-                                               : x.od.RequestedUnits),
-                                           Status: "Processing"
-                                       );
-
+                        using (var reader = await command.ExecuteReaderAsync())
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                result.Add(new ProcessingOrderDto(
+                                    reader.GetDateTime("Date").ToString(),
+                                    reader.GetString("OrderNumber"),
+                                    reader.GetString("VehicleNumber"),
+                                    reader.GetString("LineName"),
+                                    reader.GetInt32("TotalUnits"),
+                                    reader.GetString("Status")
+                                ));
+                            }
+                        }
+                    }
+                }
                 _logger.LogInfo("Processing orders retrieved successfully.");
-                return processingOrders;
+                return result;
             }
             catch (Exception ex)
             {
@@ -243,35 +263,32 @@ namespace Service
         {
             try
             {
-                var orders = await _repository.Order.GetAllOrdersAsync(trackChanges: false);
-                var orderDetails = await _repository.OrderDetail.GetAllOrderDetailsAsync(trackChanges: false);
-                var distributors = await _repository.Distributor.GetAllDistributorsAsync(trackChanges: false);
-                var productInfos = await _repository.ProductInformation.GetAllProductInformationsAsync(trackChanges: false);
-                var sensorRecords = await _repository.SensorRecord.GetAllSensorRecordsAsync(trackChanges: false);
+                var result = new List<RecentCompletedOrderDto>();
+                using (var connection = new MySqlConnection(_connectionString))
+                {
+                    await connection.OpenAsync();
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = "GetRecentCompletedOrders";
+                        command.CommandType = CommandType.StoredProcedure;
 
-                var recentOrders = (from o in orders
-                                    where o.Status == 2 // Chỉ lấy đơn đã hoàn thành
-                                    join od in orderDetails on o.Id equals od.OrderId
-                                    join d in distributors on o.DistributorId equals d.Id
-                                    join pi in productInfos on od.ProductInformationId equals pi.Id
-                                    orderby o.ExportDate descending
-                                    select new { o, od, d, pi })
-                                   .Take(5)
-                                   .GroupBy(x => x.o)
-                                   .Select(g => new RecentCompletedOrderDto(
-                                       CompletedDate: g.Key.ExportDate.ToString("yyyy-MM-dd"),
-                                       OrderNumber: g.Key.OrderCode,
-                                       DistributorName: g.First().d.DistributorName ?? "N/A",
-                                       ProductName: g.First().pi.ProductName,
-                                       TotalUnits: g.Sum(x => sensorRecords
-                                           .Where(sr => sr.OrderDetailId == x.od.Id)
-                                           .Sum(sr => sr.SensorUnits) > 0
-                                           ? sensorRecords.Where(sr => sr.OrderDetailId == x.od.Id).Sum(sr => sr.SensorUnits)
-                                           : x.od.RequestedUnits)
-                                   ));
-
+                        using (var reader = await command.ExecuteReaderAsync())
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                result.Add(new RecentCompletedOrderDto(
+                                    reader.GetDateTime("CompletedDate").ToString(),
+                                    reader.GetString("OrderNumber"),
+                                    reader.GetString("DistributorName"),
+                                    reader.GetString("ProductName"),
+                                    reader.GetInt32("TotalUnits")
+                                ));
+                            }
+                        }
+                    }
+                }
                 _logger.LogInfo("Recent completed orders retrieved successfully.");
-                return recentOrders;
+                return result;
             }
             catch (Exception ex)
             {

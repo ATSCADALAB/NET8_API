@@ -8,7 +8,7 @@ namespace Service.Contracts
     {
         Task<IEnumerable<ProductDto>> GetAllProductsAsync(bool trackChanges);
         Task<ProductDto> GetProductAsync(int productId, bool trackChanges);
-        Task<ProductDto> GetProductByTagIDAsync(string tagId, bool trackChanges);
+        Task<CheckDto> GetProductByTagIDAsync(string tagId, bool trackChanges);
         Task<IEnumerable<ProductDto>> GetProductsByDistributorAsync(int distributorId, bool trackChanges);
         Task<IEnumerable<ProductDto>> GetProductsByOrderDetailAsync(int orderDetailId, bool trackChanges);
         Task<ProductDto> CreateProductAsync(ProductForCreationDto product);
