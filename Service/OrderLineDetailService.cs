@@ -65,6 +65,7 @@ namespace Service
                 throw new ArgumentNullException(nameof(orderLineDetail), "OrderLineDetailForCreationDto cannot be null.");
 
             var orderLineDetailEntity = _mapper.Map<OrderLineDetail>(orderLineDetail);
+            orderLineDetailEntity.EndTime = null;
             _repository.OrderLineDetail.CreateOrderLineDetail(orderLineDetailEntity);
             await _repository.SaveAsync();
 
