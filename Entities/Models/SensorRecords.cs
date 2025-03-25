@@ -28,6 +28,7 @@ namespace Entities.Models
         public decimal SensorWeight { get; set; } = 0m;
 
         public DateTime RecordTime { get; set; } = DateTime.UtcNow;
+        public int Status {  get; set; }
 
         // Mối quan hệ với Order (many-to-one)
         [ForeignKey(nameof(OrderId))]

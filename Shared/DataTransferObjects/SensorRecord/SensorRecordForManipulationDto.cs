@@ -8,5 +8,6 @@
         public int SensorUnits { get; init; }
         public decimal SensorWeight { get; init; }
         public DateTime RecordTime { get; init; }
+        public int Status { get; init; }
     }
 }

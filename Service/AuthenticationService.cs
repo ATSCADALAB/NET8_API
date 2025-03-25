@@ -105,17 +105,28 @@ namespace Service
 
             // Gửi request đến iWebAPI để lấy token
             string? tokenIWebAPI = null;
-            using var httpClient = _httpClientFactory.CreateClient();
-            var response = await httpClient.PostAsJsonAsync($"{_addressIWebAPI}/login", userForAuthentication);
-
-            if (response.IsSuccessStatusCode)
+            try
             {
-                var iWebAPIResponse = await response.Content.ReadFromJsonAsync<IWebToken>();
-                tokenIWebAPI = iWebAPIResponse?.Token;
+                using var httpClient = _httpClientFactory.CreateClient();
+                var response = await httpClient.PostAsJsonAsync($"{_addressIWebAPI}/login", userForAuthentication);
 
-                _cache.Set("IWebAPIToken", tokenIWebAPI, TimeSpan.FromMinutes(60)); // Lưu 30 phút
+                if (response.IsSuccessStatusCode)
+                {
+                    var iWebAPIResponse = await response.Content.ReadFromJsonAsync<IWebToken>();
+                    tokenIWebAPI = iWebAPIResponse?.Token;
+
+                    _cache.Set("IWebAPIToken", tokenIWebAPI, TimeSpan.FromDays(1)); // Lưu 1 ngày
+                }
+                else
+                {
+                    Console.WriteLine($"Không thể lấy token từ iWebAPI: {response.StatusCode}");
+                }
             }
-            return new AuthResponseDto { IsAuthSuccessful = true, Token = token, TokenIWebAPI = tokenIWebAPI };
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi gọi iWebAPI: {ex.Message}");
+            }
+            return new AuthResponseDto { IsAuthSuccessful = true, Token = token };
         }
 
 
