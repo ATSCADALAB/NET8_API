@@ -78,8 +78,6 @@ namespace Service
                     {
                         command.CommandText = "GetOrdersByLine";
                         command.CommandType = CommandType.StoredProcedure;
-                        command.Parameters.AddWithValue("@p_start_date", startDate.HasValue ? startDate : (object)DBNull.Value);
-                        command.Parameters.AddWithValue("@p_end_date", endDate.HasValue ? endDate : (object)DBNull.Value);
 
                         using (var reader = await command.ExecuteReaderAsync())
                         {
@@ -87,7 +85,8 @@ namespace Service
                             {
                                 result.Add(new OrdersByLineDto(
                                     reader.GetString("LineName"),
-                                    reader.GetInt32("TotalOrders")
+                                    reader.GetInt32("TotalOrders"),
+                                    reader.GetGuid("OrderID").ToString()
                                 ));
                             }
                         }
