@@ -203,7 +203,8 @@ namespace Service
                                     reader.GetString("ProductName"),
                                     reader.GetInt32("RequestedUnits"),
                                     reader.GetInt32("ActualUnits"),
-                                    reader.GetDecimal("CompletionPercentage")
+                                    reader.GetDecimal("CompletionPercentage"),
+                                    reader.GetGuid("OrderId").ToString()
                                 ));
                             }
                         }
@@ -242,7 +243,10 @@ namespace Service
                                     reader.GetString("VehicleNumber"),
                                     reader.GetString("LineName"),
                                     reader.GetInt32("TotalUnits"),
+                                    reader.GetInt32("TotalRequestedUnits"),
+                                    reader.GetGuid("OrderId").ToString(),
                                     reader.GetString("Status")
+                                    
                                 ));
                             }
                         }
@@ -276,6 +280,7 @@ namespace Service
                             while (await reader.ReadAsync())
                             {
                                 result.Add(new RecentCompletedOrderDto(
+                                    reader.GetGuid("OrderId").ToString(),
                                     reader.GetDateTime("CompletedDate").ToString(),
                                     reader.GetString("OrderNumber"),
                                     reader.GetString("DistributorName"),
