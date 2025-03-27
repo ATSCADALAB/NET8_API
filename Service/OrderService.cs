@@ -309,6 +309,7 @@ namespace Service
         public async Task UpdateOrderAsync(Guid orderId, OrderForUpdateDto orderForUpdate, bool trackChanges)
         {
             var order = await GetOrderAndCheckIfItExists(orderId, trackChanges);
+            order.UpdatedAt = DateTime.Now;
             _mapper.Map(orderForUpdate, order);
             await _repository.SaveAsync();
         }

@@ -595,13 +595,14 @@ namespace Service
                     // Fill thông tin thời gian (dòng 2)
                     if (fromYear.HasValue && toYear.HasValue && fromMonth.HasValue && toMonth.HasValue)
                     {
-                        worksheet.Cell("B2").Value = $"Từ ngày: {fromMonth:D2}/{fromYear}";
-                        worksheet.Cell("D2").Value = $"đến ngày: {toMonth:D2}/{toYear}";
+                        worksheet.Cell("C3").Value = $"Từ ngày: {fromMonth}/{fromYear}";
+                        worksheet.Cell("E3").Value = $"đến ngày: {toMonth}/{toYear}";
+      
                     }
                     else if (fromYear.HasValue && toYear.HasValue)
                     {
-                        worksheet.Cell("B2").Value = $"Từ năm: {fromYear}";
-                        worksheet.Cell("D2").Value = $"đến năm: {toYear}";
+                        worksheet.Cell("C3").Value = $"Từ năm: {fromYear}";
+                        worksheet.Cell("E3").Value = $"đến năm: {toYear}";
                     }
                     else if (fromYear.HasValue)
                     {
@@ -624,7 +625,7 @@ namespace Service
 
                         // Định dạng số
                         worksheet.Cell(currentRow, 4).Style.NumberFormat.Format = "#,##0";       // Số lượng (bao)
-                        worksheet.Cell(currentRow, 5).Style.NumberFormat.Format = "#,##0.00";    // Trọng lượng (kg, 2 chữ số thập phân)
+                        worksheet.Cell(currentRow, 5).Style.NumberFormat.Format = "#,##0";    // Trọng lượng (kg, 2 chữ số thập phân)
 
                         // Căn giữa tất cả các cột
                         var range = worksheet.Range(currentRow, 1, currentRow, 5);
@@ -761,11 +762,11 @@ namespace Service
                         worksheet.Cell(currentRow, 2).Value = item.ProductName;      // Sản Phẩm
                         worksheet.Cell(currentRow, 3).Value = item.ExportPeriod;     // Tháng/Năm
                         worksheet.Cell(currentRow, 4).Value = item.TotalUnits;       // Số lượng trong tháng/năm
-                        worksheet.Cell(currentRow, 5).Value = item.CumulativeWeight; // Luỹ Kế (Trọng lượng)
+                        worksheet.Cell(currentRow, 5).Value = item.CumulativeUnits; // Luỹ Kế (Trọng lượng)
 
                         // Định dạng số
                         worksheet.Cell(currentRow, 4).Style.NumberFormat.Format = "#,##0";       // Số lượng (bao)
-                        worksheet.Cell(currentRow, 5).Style.NumberFormat.Format = "#,##0.00";    // Trọng lượng (kg, 2 chữ số thập phân)
+                        worksheet.Cell(currentRow, 5).Style.NumberFormat.Format = "#,##0";    // Trọng lượng (kg, 2 chữ số thập phân)
 
                         // Căn giữa tất cả các cột
                         var range = worksheet.Range(currentRow, 1, currentRow, 5);
