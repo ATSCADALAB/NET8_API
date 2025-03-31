@@ -105,7 +105,7 @@ namespace Service
 
                                         // Tìm distributor và product từ cache
                                         var distributor = allDistributors.FirstOrDefault(d => 
-                                            d.DistributorName.Equals(distributorName, StringComparison.OrdinalIgnoreCase));
+                                            d.DistributorCode.Equals(distributorName, StringComparison.OrdinalIgnoreCase));
                                         if (distributor == null)
                                             throw new Exception($"Distributor '{distributorName}' not found.");
 

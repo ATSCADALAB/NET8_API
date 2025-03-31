@@ -12,6 +12,7 @@ namespace Shared.DataTransferObjects.OrderLineDetail
         public int LineNumber { get; set; }
         public string LineName { get; set; }
         public Guid OrderId { get; set; } // Sử dụng string vì OrderId là CHAR(36) trong MySQL
+        public int OrderDetailId { get; set; } // Sử dụng string vì OrderId là CHAR(36) trong MySQL
         public string OrderCode { get; set; }
         public int DistributorId { get; set; }
         public string DistributorName { get; set; }

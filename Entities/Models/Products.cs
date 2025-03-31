@@ -17,6 +17,12 @@ namespace Entities.Models
         [StringLength(50, MinimumLength = 1)]
         public string TagID { get; set; }
 
+        [StringLength(100)]
+        public string StockOut { get; set; }
+
+        [StringLength(200)]
+        public string Distributor2 { get; set; }
+
         public int? OrderDetailId { get; set; } // Nullable vì OrderId có thể null
 
         public DateTime ShipmentDate { get; set; } = DateTime.UtcNow;

@@ -118,6 +118,7 @@ namespace Service
                                     LineNumber = reader.GetInt32("LineNumber"),
                                     LineName = reader.GetString("LineName"),
                                     OrderId = reader.GetGuid("OrderId"),
+                                    OrderDetailId = reader.GetInt32("OrderDetailId"),
                                     OrderCode = reader.GetString("OrderCode"),
                                     DistributorId = reader.GetInt32("DistributorId"),
                                     DistributorName = reader.GetString("DistributorName"),

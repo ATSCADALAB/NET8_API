@@ -18,7 +18,7 @@ namespace QuickStart.Presentation.Controllers
         public DistributorController(IServiceManager service) => _service = service;
 
         [HttpGet]
-        [AuthorizePermission("Distributors", "View")]
+        //[AuthorizePermission("Distributors", "View")]
         public async Task<IActionResult> GetAllDistributors()
         {
             var distributors = await _service.DistributorService.GetAllDistributorsAsync(trackChanges: false);
@@ -116,7 +116,7 @@ namespace QuickStart.Presentation.Controllers
                         {
                             try
                             {
-                                var areaName = worksheet.Cell(row, 6).GetString()?.Trim();
+                                var areaName = worksheet.Cell(row, 4).GetString()?.Trim();
                                 var area = areas.FirstOrDefault(a => a.AreaName == areaName);
                                 int? areaId = area?.Id; // Nếu không tìm thấy area thì để null
 
@@ -124,17 +124,14 @@ namespace QuickStart.Presentation.Controllers
                                 {
                                     DistributorCode = worksheet.Cell(row, 1).GetString()?.Trim(), // Mã NPP
                                     DistributorName = worksheet.Cell(row, 2).GetString()?.Trim(), // Tên nhà PP
-                                    Address = worksheet.Cell(row, 3).GetString()?.Trim(), // Địa chỉ
-                                    PhoneNumber = worksheet.Cell(row, 4).GetString()?.Trim(), // Số điện thoại
-                                    ContactSource = worksheet.Cell(row, 5).GetString()?.Trim(), // Người liên hệ
+                                    Province = worksheet.Cell(row, 3).GetString()?.Trim(), // Địa chỉ
                                     AreaId = areaId ?? 0, // Nếu không có area thì để 0 hoặc bỏ qua tùy logic backend
                                     IsActive = true // Giá trị mặc định
                                 };
 
                                 // Kiểm tra dữ liệu cơ bản
                                 if (string.IsNullOrWhiteSpace(distributor.DistributorCode) ||
-                                    string.IsNullOrWhiteSpace(distributor.DistributorName) ||
-                                    string.IsNullOrWhiteSpace(distributor.PhoneNumber))
+                                    string.IsNullOrWhiteSpace(distributor.DistributorName))
                                 {
                                     throw new Exception("Missing required fields (DistributorCode, DistributorName, PhoneNumber).");
                                 }

@@ -68,7 +68,7 @@ namespace QuickStart.Presentation.Controllers
         [HttpGet("template")]
         public IActionResult DownloadProductInformationTemplate()
         {
-            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "Distributor.xlsx");
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "ProductInformation.xlsx");
             if (!System.IO.File.Exists(filePath))
                 return NotFound("Template file not found.");
 

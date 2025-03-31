@@ -21,17 +21,17 @@ namespace Entities.Models
         [Required]
         [StringLength(100, MinimumLength = 1)]
         public string DistributorName { get; set; }
-        [Required]
+
         [StringLength(100, MinimumLength = 1)]
-        public string ContactSource { get; set; }
-
-        [Required]
+        public string ?ContactSource { get; set; }
         [StringLength(200, MinimumLength = 1)]
-        public string Address { get; set; }
+        public string? Address { get; set; }
 
-        [Required]
+        [StringLength(200, MinimumLength = 1)]
+        public string ? Province { get; set; }
+
         [StringLength(20, MinimumLength = 10)]
-        public string PhoneNumber { get; set; }
+        public string ?PhoneNumber { get; set; }
 
         [Required]
         public int AreaId { get; set; }

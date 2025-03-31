@@ -3,6 +3,8 @@
     public abstract record ProductForManipulationDto
     {
         public string TagID { get; init; }
+        public string StockOut { get; init; }
+        public string Distributor2 { get; init; }
         public int? OrderDetailId { get; init; } // Nullable để khớp với model
         public DateTime ShipmentDate { get; init; }
         public DateTime ManufactureDate { get; init; }
