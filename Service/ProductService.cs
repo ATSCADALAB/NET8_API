@@ -95,7 +95,7 @@ namespace Service
             catch (Exception ex)
             {
                 _logger.LogError($"Error fetching product with TagID {tagId}: {ex.Message}");
-                throw;
+                return null; // Hoặc throw exception tùy yêu cầu
             }
         }
 
