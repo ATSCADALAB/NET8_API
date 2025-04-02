@@ -56,15 +56,19 @@ namespace Service
 
         public async Task<DistributorDto> CreateDistributorAsync(DistributorForCreationDto distributor)
         {
+            var check = await GetDistributorAndCheckIfItExists(distributor.DistributorCode, false);
             if (distributor == null)
                 throw new ArgumentNullException(nameof(distributor), "DistributorForCreationDto cannot be null.");
+            if(check == null)
+            {
+                var distributorEntity = _mapper.Map<Distributor>(distributor);
+                _repository.Distributor.CreateDistributor(distributorEntity);
+                await _repository.SaveAsync();
 
-            var distributorEntity = _mapper.Map<Distributor>(distributor);
-            _repository.Distributor.CreateDistributor(distributorEntity);
-            await _repository.SaveAsync();
-
-            var distributorToReturn = _mapper.Map<DistributorDto>(distributorEntity);
-            return distributorToReturn;
+                var distributorToReturn = _mapper.Map<DistributorDto>(distributorEntity);
+                return distributorToReturn;
+            }
+            return null;
         }
 
         public async Task UpdateDistributorAsync(int distributorId, DistributorForUpdateDto distributorForUpdate, bool trackChanges)
@@ -80,7 +84,13 @@ namespace Service
             _repository.Distributor.DeleteDistributor(distributor);
             await _repository.SaveAsync();
         }
-
+        private async Task<Distributor> GetDistributorAndCheckIfItExists(string code, bool trackChanges)
+        {
+            var distributor = await _repository.Distributor.GetDistributorByCodeAsync(code, trackChanges);
+            if (distributor != null)
+                throw new DistributorNotFoundException(0);
+            return distributor;
+        }
         private async Task<Distributor> GetDistributorAndCheckIfItExists(int id, bool trackChanges)
         {
             var distributor = await _repository.Distributor.GetDistributorByIdAsync(id, trackChanges);
@@ -88,5 +98,6 @@ namespace Service
                 throw new DistributorNotFoundException(id);
             return distributor;
         }
+        
     }
 }

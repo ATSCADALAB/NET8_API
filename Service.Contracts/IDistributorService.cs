@@ -13,5 +13,6 @@ namespace Service.Contracts
         Task<DistributorDto> CreateDistributorAsync(DistributorForCreationDto distributor);
         Task UpdateDistributorAsync(int distributorId, DistributorForUpdateDto distributorForUpdate, bool trackChanges);
         Task DeleteDistributorAsync(int distributorId, bool trackChanges);
+        
     }
 }

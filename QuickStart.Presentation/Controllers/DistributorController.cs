@@ -83,6 +83,14 @@ namespace QuickStart.Presentation.Controllers
             var fileBytes = System.IO.File.ReadAllBytes(filePath);
             return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Distributor.xlsx");
         }
+        // Hàm Normalize viết trong Controller
+        private string Normalize(string input)
+        {
+            return string.IsNullOrWhiteSpace(input)
+                ? string.Empty
+                : string.Join(" ", input.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries))
+                    .ToLowerInvariant();
+        }
         [HttpPost("import")]
         //[ServiceFilter(typeof(ValidationFilterAttribute))]
         [AuthorizePermission("Distributors", "Create")]
@@ -116,15 +124,17 @@ namespace QuickStart.Presentation.Controllers
                         {
                             try
                             {
-                                var areaName = worksheet.Cell(row, 4).GetString()?.Trim();
-                                var area = areas.FirstOrDefault(a => a.AreaName == areaName);
-                                int? areaId = area?.Id; // Nếu không tìm thấy area thì để null
+                                var areaName = worksheet.Cell(row, 6).GetString()?.Trim();
+                                var normalizedAreaName = Normalize(areaName);
+                                var area = areas.FirstOrDefault(a => Normalize(a.AreaName) == normalizedAreaName);
+                                int? areaId = area?.Id;
 
                                 var distributor = new DistributorForCreationDto
                                 {
                                     DistributorCode = worksheet.Cell(row, 1).GetString()?.Trim(), // Mã NPP
-                                    DistributorName = worksheet.Cell(row, 2).GetString()?.Trim(), // Tên nhà PP
-                                    Province = worksheet.Cell(row, 3).GetString()?.Trim(), // Địa chỉ
+                                    DistributorName = worksheet.Cell(row, 3).GetString()?.Trim(), // Tên ĐT Thuế GTGT (Update 01/04/2025)
+                                    Address = worksheet.Cell(row, 4).GetString()?.Trim(),
+                                    Province = worksheet.Cell(row, 5).GetString()?.Trim(), // Tỉnh thành
                                     AreaId = areaId ?? 0, // Nếu không có area thì để 0 hoặc bỏ qua tùy logic backend
                                     IsActive = true // Giá trị mặc định
                                 };
@@ -155,13 +165,21 @@ namespace QuickStart.Presentation.Controllers
                             {
                                 foreach (var distributor in batch)
                                 {
-                                    await _service.DistributorService.CreateDistributorAsync(distributor);
-                                    successCount++;
+                                    try
+                                    {
+                                        await _service.DistributorService.CreateDistributorAsync(distributor);
+                                        successCount++;
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        errors.Add($"Distributor Code is exist :{distributor.DistributorCode}");
+                                    }
+
                                 }
                             }
                             catch (Exception ex)
                             {
-                                errors.Add($"Batch {i / batchSize + 1}: {ex.Message} - Inner: {ex.InnerException?.Message}");
+                                
                             }
                         }
 
@@ -171,8 +189,6 @@ namespace QuickStart.Presentation.Controllers
                             Errors = errors
                         };
 
-                        if (errors.Count > 0)
-                            return BadRequest(result);
 
                         return Ok(result);
                     }
