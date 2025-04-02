@@ -144,7 +144,8 @@ namespace Service
                     {
                         if (!lineId.HasValue && !productInformationId.HasValue)
                         {
-                            worksheet.Cell(currentRow, 1).Value = DateTime.Parse(item.Date).ToString("dd/MM/yyyy");
+                            worksheet.Cell(currentRow, 1).Value = item.Date;
+                            //worksheet.Cell(currentRow, 1).Value = DateTime.Parse(item.Date).ToString("dd/MM/yyyy");
                             worksheet.Cell(currentRow, 2).Value = item.LineName;
                             worksheet.Cell(currentRow, 3).Value = item.TotalOrders;
                             worksheet.Cell(currentRow, 4).Value = item.TotalSensorUnits;
@@ -156,7 +157,8 @@ namespace Service
                         }
                         else
                         {
-                            worksheet.Cell(currentRow, 1).Value = DateTime.Parse(item.Date).ToString("dd/MM/yyyy");
+                            worksheet.Cell(currentRow, 1).Value = item.Date;
+                            //worksheet.Cell(currentRow, 1).Value = DateTime.Parse(item.Date).ToString("dd/MM/yyyy");
                             worksheet.Cell(currentRow, 2).Value = item.LineName;
                             worksheet.Cell(currentRow, 3).Value = item.ProductName;
                             worksheet.Cell(currentRow, 4).Value = item.TotalOrders;
@@ -302,13 +304,19 @@ namespace Service
                     // Fill thông tin thời gian
                     worksheet.Cell("D3").Value = $"Từ ngày: {startDate:dd/MM/yyyy}";
                     worksheet.Cell("E3").Value = $"đến ngày: {endDate:dd/MM/yyyy}";
-                    worksheet.Cell("B5").Value = $"{licensePlate}";
+                    if(licensePlate != null)
+                    {
+                        worksheet.Cell("B5").Value = $"{licensePlate}";
+                    }
+                    else worksheet.Cell("B5").Value = "ALL";
+
 
                     // Fill dữ liệu từ row 7
                     int currentRow = 7;
                     foreach (var item in data)
                     {
-                        worksheet.Cell(currentRow, 1).Value = DateTime.Parse(item.Date).ToString("dd/MM/yyyy");
+                        worksheet.Cell(currentRow, 1).Value = item.Date;
+                        //worksheet.Cell(currentRow, 1).Value = DateTime.Parse(item.Date).ToString("dd/MM/yyyy");
                         worksheet.Cell(currentRow, 2).Value = item.LineName;
                         worksheet.Cell(currentRow, 3).Value = item.ProductName;
                         worksheet.Cell(currentRow, 4).Value = item.TotalOrders;
@@ -455,7 +463,8 @@ namespace Service
                     int currentRow = 6;
                     foreach (var item in data)
                     {
-                        worksheet.Cell(currentRow, 1).Value = DateTime.Parse(item.Date).ToString("dd/MM/yyyy");
+                        worksheet.Cell(currentRow, 1).Value = item.Date;
+                        //worksheet.Cell(currentRow, 1).Value = DateTime.Parse(item.Date).ToString("dd/MM/yyyy");
                         worksheet.Cell(currentRow, 2).Value = item.LicensePlate;
                         worksheet.Cell(currentRow, 3).Value = item.ProductName;
                         worksheet.Cell(currentRow, 4).Value = item.RequestedUnits;
