@@ -14,6 +14,8 @@ namespace Shared.DataTransferObjects.Product
         public DateTime ShipmentDate { get; set; }
         public CheckDistributorDto Distributor { get; set; }
         public string Delivery { get; set; } // Giả định đây là trường tùy chỉnh
+        public string Province { get; set; } // Giả định đây là trường tùy chỉnh
+        public string Distributor2 { get; set; } // Giả định đây là trường tùy chỉnh
     }
 
     public class CheckProductInformationDto
