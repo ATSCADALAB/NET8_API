@@ -18,7 +18,7 @@ namespace QuickStart.Presentation.Controllers
         public ProductInformationController(IServiceManager service) => _service = service;
 
         [HttpGet]
-        [AuthorizePermission("ProductInformations", "View")]
+        //[AuthorizePermission("ProductInformations", "View")]
         public async Task<IActionResult> GetAllProductInformations()
         {
             var productInformations = await _service.ProductInformationService.GetAllProductInformationsAsync(trackChanges: false);
@@ -33,7 +33,7 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpGet("code/{productCode}")]
-        [AuthorizePermission("ProductInformations", "View")]
+        //[AuthorizePermission("ProductInformations", "View")]
         public async Task<IActionResult> GetProductInformationByCode(string productCode)
         {
             var productInformation = await _service.ProductInformationService.GetProductInformationByCodeAsync(productCode, trackChanges: false);

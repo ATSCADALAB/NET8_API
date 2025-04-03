@@ -9,7 +9,7 @@ namespace QuickStart.Presentation.Controllers
 {
     [Route("api/categories")]
     [ApiController]
-    //[Authorize]
+    [Authorize]
     public class CategoryController : ControllerBase
     {
         private readonly IServiceManager _service;

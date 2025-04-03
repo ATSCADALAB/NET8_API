@@ -16,7 +16,7 @@ namespace QuickStart.Presentation.Controllers
         public ProductController(IServiceManager service) => _service = service;
 
         [HttpGet]
-        [AuthorizePermission("Products", "View")]
+        //[AuthorizePermission("Products", "View")]
         public async Task<IActionResult> GetAllProducts()
         {
             var products = await _service.ProductService.GetAllProductsAsync(trackChanges: false);
@@ -24,7 +24,7 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpGet("{productId:int}", Name = "GetProductById")]
-        [AuthorizePermission("Products", "View")]
+        //[AuthorizePermission("Products", "View")]
         public async Task<IActionResult> GetProduct(int productId)
         {
             var product = await _service.ProductService.GetProductAsync(productId, trackChanges: false);
@@ -39,7 +39,7 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpGet("by-distributor/{distributorId:int}")]
-        [AuthorizePermission("Products", "View")]
+        //[AuthorizePermission("Products", "View")]
         public async Task<IActionResult> GetProductsByDistributor(int distributorId)
         {
             var products = await _service.ProductService.GetProductsByDistributorAsync(distributorId, trackChanges: false);
@@ -47,7 +47,7 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpGet("by-order-detail/{orderDetailId:int}")]
-        [AuthorizePermission("Products", "View")]
+        //[AuthorizePermission("Products", "View")]
         public async Task<IActionResult> GetProductsByOrderDetail(int orderDetailId)
         {
             var products = await _service.ProductService.GetProductsByOrderDetailAsync(orderDetailId, trackChanges: false);
@@ -56,7 +56,7 @@ namespace QuickStart.Presentation.Controllers
 
         [HttpPost]
         //[ServiceFilter(typeof(ValidationFilterAttribute))]
-        //[AuthorizePermission("Products", "Create")]
+        [AuthorizePermission("Products", "Create")]
         public async Task<IActionResult> CreateProduct([FromBody] ProductForCreationDto product)
         {
             var createdProduct = await _service.ProductService.CreateProductAsync(product);

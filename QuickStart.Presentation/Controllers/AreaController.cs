@@ -8,7 +8,7 @@ namespace QuickStart.Presentation.Controllers
 {
     [Route("api/areas")]
     [ApiController]
-    //[Authorize]
+    [Authorize]
     public class AreaController : ControllerBase
     {
         private readonly IServiceManager _service;
