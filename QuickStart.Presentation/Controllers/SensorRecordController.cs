@@ -8,7 +8,7 @@ namespace QuickStart.Presentation.Controllers
 {
     [Route("api/sensor-records")]
     [ApiController]
-    //[Authorize]
+    [Authorize]
     public class SensorRecordController : ControllerBase
     {
         private readonly IServiceManager _service;
@@ -32,7 +32,7 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpGet("by-order/{orderId:guid}")]
-        //[AuthorizePermission("SensorRecords", "View")]
+        [AuthorizePermission("SensorRecords", "View")]
         public async Task<IActionResult> GetSensorRecordsByOrder(Guid orderId)
         {
             var sensorRecords = await _service.SensorRecordService.GetSensorRecordsByOrderAsync(orderId, trackChanges: false);
@@ -65,7 +65,7 @@ namespace QuickStart.Presentation.Controllers
 
         [HttpPost]
         [ServiceFilter(typeof(ValidationFilterAttribute))]
-        //[AuthorizePermission("SensorRecords", "Create")]
+        [AuthorizePermission("SensorRecords", "Create")]
         public async Task<IActionResult> CreateSensorRecord([FromBody] SensorRecordForCreationDto sensorRecord)
         {
             var createdSensorRecord = await _service.SensorRecordService.CreateSensorRecordAsync(sensorRecord);

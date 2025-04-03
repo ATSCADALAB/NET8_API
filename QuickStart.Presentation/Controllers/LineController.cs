@@ -8,7 +8,7 @@ namespace QuickStart.Presentation.Controllers
 {
     [Route("api/lines")]
     [ApiController]
-    //[Authorize]
+    [Authorize]
     public class LineController : ControllerBase
     {
         private readonly IServiceManager _service;
