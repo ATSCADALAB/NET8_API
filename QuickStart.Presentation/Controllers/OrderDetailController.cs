@@ -8,7 +8,7 @@ namespace QuickStart.Presentation.Controllers
 {
     [Route("api/order-details")]
     [ApiController]
-    //[Authorize]
+    [Authorize]
     public class OrderDetailController : ControllerBase
     {
         private readonly IServiceManager _service;
@@ -16,7 +16,7 @@ namespace QuickStart.Presentation.Controllers
         public OrderDetailController(IServiceManager service) => _service = service;
 
         [HttpGet]
-        //[AuthorizePermission("OrderDetails", "View")]
+        [AuthorizePermission("OrderDetails", "View")]
         public async Task<IActionResult> GetAllOrderDetails()
         {
             var orderDetails = await _service.OrderDetailService.GetAllOrderDetailsAsync(trackChanges: false);
@@ -32,7 +32,7 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpGet("by-order/{orderId:guid}")]
-        //[AuthorizePermission("OrderDetails", "View")]
+        [AuthorizePermission("OrderDetails", "View")]
         public async Task<IActionResult> GetOrderDetailsByOrder(Guid orderId)
         {
             var orderDetails = await _service.OrderDetailService.GetOrderDetailsByOrderAsync(orderId, trackChanges: false);

@@ -9,7 +9,7 @@ namespace QuickStart.Presentation.Controllers
 {
     [Route("api/permissions")]
     [ApiController]
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     public class PermissionController : ControllerBase
     {
         private readonly IServiceManager _service;

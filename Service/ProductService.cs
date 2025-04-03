@@ -29,9 +29,16 @@ namespace Service
 
         public async Task<IEnumerable<ProductDto>> GetAllProductsAsync(bool trackChanges)
         {
-            var products = await _repository.Product.GetAllProductsAsync(trackChanges);
-            var productsDto = _mapper.Map<IEnumerable<ProductDto>>(products);
-            return productsDto;
+            try
+            {
+                var products = await _repository.Product.GetAllProductsAsync(trackChanges);
+                var productsDto = _mapper.Map<IEnumerable<ProductDto>>(products);
+                return productsDto;
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
         }
 
         public async Task<ProductDto> GetProductAsync(int productId, bool trackChanges)

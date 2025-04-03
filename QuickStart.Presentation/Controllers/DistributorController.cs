@@ -14,7 +14,6 @@ namespace QuickStart.Presentation.Controllers
     public class DistributorController : ControllerBase
     {
         private readonly IServiceManager _service;
-
         public DistributorController(IServiceManager service) => _service = service;
 
         [HttpGet]
@@ -33,7 +32,7 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpGet("code/{distributorCode}")]
-        [AuthorizePermission("Distributors", "View")]
+        //[AuthorizePermission("Distributors", "View")]
         public async Task<IActionResult> GetDistributorByCode(string distributorCode)
         {
             var distributor = await _service.DistributorService.GetDistributorByCodeAsync(distributorCode, trackChanges: false);
@@ -41,7 +40,7 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpGet("by-area/{areaId:int}")]
-        [AuthorizePermission("Distributors", "View")]
+        //[AuthorizePermission("Distributors", "View")]
         public async Task<IActionResult> GetDistributorsByArea(int areaId)
         {
             var distributors = await _service.DistributorService.GetDistributorsByAreaAsync(areaId, trackChanges: false);
@@ -83,7 +82,7 @@ namespace QuickStart.Presentation.Controllers
             var fileBytes = System.IO.File.ReadAllBytes(filePath);
             return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Distributor.xlsx");
         }
-        // Hàm Normalize viết trong Controller
+        // Hàm Normalize để chuyển chuỗi về chữ thường, xoá khoảng trống để import
         private string Normalize(string input)
         {
             return string.IsNullOrWhiteSpace(input)

@@ -18,10 +18,10 @@ namespace Entities.Models
         public string TagID { get; set; }
 
         [StringLength(100)]
-        public string StockOut { get; set; }
+        public string? StockOut { get; set; }
 
         [StringLength(200)]
-        public string Distributor2 { get; set; }
+        public string? Distributor2 { get; set; }
 
         public int? OrderDetailId { get; set; } // Nullable vì OrderId có thể null
 
@@ -40,6 +40,8 @@ namespace Entities.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        [StringLength(200)]
+        public string? Delivery { get; set; } 
 
         // Mối quan hệ với OrderDetail (many-to-one, nullable)
         [ForeignKey(nameof(OrderDetailId))]
