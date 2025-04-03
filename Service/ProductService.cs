@@ -76,8 +76,10 @@ namespace Service
                                     Distributor = new CheckDistributorDto
                                     {
                                         DistributorName = reader.GetString("DistributorName"),
-                                        Area = reader.GetString("AreaName")
+                                        Area = reader.GetString("AreaName"),
+                                        Address = reader.GetString("Address")
                                     },
+                                    Province = reader.GetString("Province"),
                                     Delivery = reader.IsDBNull(reader.GetOrdinal("Delivery"))
                                         ? "N/A"
                                         : reader.GetString("Delivery")

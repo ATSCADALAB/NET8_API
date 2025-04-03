@@ -28,5 +28,6 @@ namespace Shared.DataTransferObjects.Product
     {
         public string DistributorName { get; set; }
         public string Area { get; set; } // AreaName từ bảng Area
+        public string Address {get; set; } // AreaName từ bảng Area
     }
 }
