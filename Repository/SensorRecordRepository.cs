@@ -15,10 +15,12 @@ namespace Repository
 
         public async Task<IEnumerable<SensorRecord>> GetAllSensorRecordsAsync(bool trackChanges) =>
             await FindAll(trackChanges)
+                .Where(sr=>sr.Status==1)
                 .Include(sr => sr.Order)
                 .Include(sr => sr.OrderDetail)
                 .Include(sr => sr.Line)
                 .OrderBy(sr => sr.RecordTime)
+
                 .ToListAsync();
 
         public async Task<SensorRecord> GetSensorRecordByIdAsync(int sensorRecordId, bool trackChanges) =>
