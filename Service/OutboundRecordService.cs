@@ -2,6 +2,7 @@
 using Contracts;
 using Entities.Exceptions.Stock;
 using Entities.Models;
+using Microsoft.AspNetCore.Http;
 using Service.Contracts;
 using Shared.DataTransferObjects.OutboundRecord;
 using System;
@@ -49,7 +50,7 @@ namespace Service
             return _mapper.Map<IEnumerable<OutboundRecordDto>>(outboundRecords);
         }
 
-        public async Task<OutboundRecordDto> CreateOutboundRecordAsync(OutboundRecordForCreationDto outboundRecord)
+        public async Task<OutboundRecordDto> CreateOutboundRecordAsync(OutboundRecordForCreationDto outboundRecord, IHttpContextAccessor httpContextAccessor)
         {
             if (outboundRecord == null)
                 throw new ArgumentNullException(nameof(outboundRecord), "OutboundRecordForCreationDto cannot be null.");
@@ -63,6 +64,7 @@ namespace Service
             stock.LastUpdated = DateTime.UtcNow;
 
             var outboundEntity = _mapper.Map<OutboundRecord>(outboundRecord);
+            outboundEntity.SetCreatedBy(httpContextAccessor);
             _repository.OutboundRecord.CreateOutboundRecord(outboundEntity);
 
             await _repository.SaveAsync();

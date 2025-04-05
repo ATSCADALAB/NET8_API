@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Entities.Models
 {
     [Table("OrderDetails")]
-    public class OrderDetail
+    public class OrderDetail 
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -38,6 +38,7 @@ namespace Entities.Models
         public decimal ReplacedWeight { get; set; } = 0m;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+       
 
         // Mối quan hệ với Order (many-to-one)
         [ForeignKey(nameof(OrderId))]

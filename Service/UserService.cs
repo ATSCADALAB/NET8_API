@@ -14,6 +14,7 @@ namespace Service
         private readonly ILoggerManager _logger;
         private readonly IMapper _mapper;
         private readonly UserManager<User> _userManager;
+
         public UserService(ILoggerManager logger, IMapper mapper, UserManager<User> userManager)
         {
             _logger = logger;

@@ -9,7 +9,7 @@ namespace QuickStart.Presentation.Controllers
 {
     [Route("api/reports")]
     [ApiController]
-    [Authorize] // Bỏ comment nếu cần authentication
+    //[Authorize] // Bỏ comment nếu cần authentication
     public class ReportController : ControllerBase
     {
         private readonly IServiceManager _service;

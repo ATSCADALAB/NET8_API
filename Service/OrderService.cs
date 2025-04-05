@@ -28,7 +28,7 @@ namespace Service
             _mapper = mapper;
             _connectionString = configuration.GetConnectionString("sqlConnection");
         }
-        public async Task<ImportResult> ImportOrdersFromExcelAsync(IFormFile file)
+        public async Task<ImportResult> ImportOrdersFromExcelAsync(IFormFile file, IHttpContextAccessor httpContextAccessor)
         {
             var errors = new List<string>();
             var skippedRows = new List<string>();
@@ -80,6 +80,7 @@ namespace Service
                                         var productCode = worksheet.Cell(row, 4).GetValue<string>()?.Trim();
                                         var requestedWeight = worksheet.Cell(row, 6).GetValue<decimal>();
                                         var requestedUnits = worksheet.Cell(row, 7).GetValue<int>();
+                                        var createdBy = httpContextAccessor.HttpContext?.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
                                         DateTime? manufactureDate = null;
                                         var manufactureDateCell = worksheet.Cell(row, 8);
@@ -127,7 +128,7 @@ namespace Service
                                         command.Parameters.Add(new MySqlParameter("@p_requested_weight", requestedWeight));
                                         command.Parameters.Add(new MySqlParameter("@p_manufacture_date", 
                                             (object)manufactureDate ?? DBNull.Value));
-
+                                        command.Parameters.Add(new MySqlParameter("@p_created_by", createdBy));
                                         using (var reader = await command.ExecuteReaderAsync())
                                         {
                                             if (await reader.ReadAsync())
@@ -217,7 +218,9 @@ namespace Service
                                     DistributorName = reader.GetString("DistributorName"),
                                     Area = reader.GetString("AreaName"),
                                     CreatedAt = reader.GetDateTime("CreatedAt"),
-                                    UpdatedAt = reader.IsDBNull(reader.GetOrdinal("UpdatedAt")) ? null : reader.GetDateTime("UpdatedAt"),
+                                    UpdatedAt = reader.IsDBNull(reader.GetOrdinal("UpdatedAt")) ? null : reader.GetDateTime("UpdatedAt"), 
+                                    CreatedByName = reader.GetString("CreatedByName"),
+                                    UpdatedByName = reader.GetString("UpdatedByName"),
                                     OrderDetail = reader.IsDBNull(reader.GetOrdinal("OrderDetailId")) ? null : new OrderDetailWithProductDto
                                     {
                                         Id = reader.GetInt32("OrderDetailId"),
@@ -232,7 +235,7 @@ namespace Service
                                         DefectiveWeight = reader.GetDecimal("DefectiveWeight"),
                                         ReplacedUnits = reader.GetInt32("ReplacedUnits"),
                                         ReplacedWeight = reader.GetDecimal("ReplacedWeight"),
-                                        CreatedAt = reader.GetDateTime("OrderDetailCreatedAt")
+                                        CreatedAt = reader.GetDateTime("OrderDetailCreatedAt"),
                                     }
                                 });
                             }
@@ -257,9 +260,17 @@ namespace Service
         
         public async Task<IEnumerable<OrderDto>> GetAllOrdersAsync(bool trackChanges)
         {
-            var orders = await _repository.Order.GetAllOrdersAsync(trackChanges);
-            var ordersDto = _mapper.Map<IEnumerable<OrderDto>>(orders);
-            return ordersDto;
+            try
+            {
+                var orders = await _repository.Order.GetAllOrdersAsync(trackChanges);
+                var ordersDto = _mapper.Map<IEnumerable<OrderDto>>(orders);
+
+                return ordersDto;
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
         }
 
         public async Task<OrderDto> GetOrderAsync(Guid orderId, bool trackChanges)
@@ -271,12 +282,19 @@ namespace Service
 
         public async Task<OrderDto> GetOrderByCodeAsync(string orderCode, bool trackChanges)
         {
-            var order = await _repository.Order.GetOrderByCodeAsync(orderCode, trackChanges);
-            if (order is null)
-                throw new OrderNotFoundException(Guid.Empty); // Guid không quan trọng vì dùng Code
+            try
+            {
+                var order = await _repository.Order.GetOrderByCodeAsync(orderCode, trackChanges);
+                if (order is null)
+                    throw new OrderNotFoundException(Guid.Empty); // Guid không quan trọng vì dùng Code
 
-            var orderDto = _mapper.Map<OrderDto>(order);
-            return orderDto;
+                var orderDto = _mapper.Map<OrderDto>(order);
+                return orderDto;
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
         }
 
         public async Task<IEnumerable<OrderDto>> GetOrdersByDistributorAsync(int distributorId, bool trackChanges)
@@ -293,12 +311,14 @@ namespace Service
             return ordersDto;
         }
 
-        public async Task<OrderDto> CreateOrderAsync(OrderForCreationDto order)
+        public async Task<OrderDto> CreateOrderAsync(OrderForCreationDto order, IHttpContextAccessor httpContextAccessor)
         {
             if (order == null)
                 throw new ArgumentNullException(nameof(order), "OrderForCreationDto cannot be null.");
 
             var orderEntity = _mapper.Map<Order>(order);
+
+            orderEntity.SetCreatedBy(httpContextAccessor);
             _repository.Order.CreateOrder(orderEntity);
             await _repository.SaveAsync();
 
@@ -306,10 +326,11 @@ namespace Service
             return orderToReturn;
         }
 
-        public async Task UpdateOrderAsync(Guid orderId, OrderForUpdateDto orderForUpdate, bool trackChanges)
+        public async Task UpdateOrderAsync(Guid orderId, OrderForUpdateDto orderForUpdate, IHttpContextAccessor httpContextAccessor, bool trackChanges)
         {
             var order = await GetOrderAndCheckIfItExists(orderId, trackChanges);
             order.UpdatedAt = DateTime.Now;
+            order.SetUpdatedBy(httpContextAccessor);
             _mapper.Map(orderForUpdate, order);
             await _repository.SaveAsync();
         }

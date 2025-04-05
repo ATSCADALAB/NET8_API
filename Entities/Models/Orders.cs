@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Entities.Models
 {
     [Table("Orders")]
-    public class Order
+    public class Order : BaseEntity
     {
         [Key]
         public Guid Id { get; set; } = Guid.NewGuid();
@@ -31,9 +31,9 @@ namespace Entities.Models
         [Required]
         public int DistributorId { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        //public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        //public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         // Mối quan hệ với Distributor (many-to-one)
         [ForeignKey(nameof(DistributorId))]

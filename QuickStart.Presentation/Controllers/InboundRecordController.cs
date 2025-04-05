@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using QuickStart.Presentation.ActionFilters;
 using Service.Contracts;
@@ -9,15 +10,19 @@ namespace QuickStart.Presentation.Controllers
 {
     [Route("api/inbound-records")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class InboundRecordController : ControllerBase
     {
         private readonly IServiceManager _service;
-
-        public InboundRecordController(IServiceManager service) => _service = service;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        public InboundRecordController(IServiceManager service, IHttpContextAccessor contextAccessor)
+        {
+            _service = service;
+            _httpContextAccessor = contextAccessor;
+        }
 
         [HttpGet]
-        [AuthorizePermission("InboundRecords", "View")]
+        //[AuthorizePermission("InboundRecords", "View")]
         public async Task<IActionResult> GetAllInboundRecords()
         {
             var inboundRecords = await _service.InboundRecordService.GetAllInboundRecordsAsync(trackChanges: false);
@@ -25,7 +30,7 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpGet("{inboundRecordId:int}", Name = "GetInboundRecordById")]
-        [AuthorizePermission("InboundRecords", "View")]
+        //[AuthorizePermission("InboundRecords", "View")]
         public async Task<IActionResult> GetInboundRecord(int inboundRecordId)
         {
             var inboundRecord = await _service.InboundRecordService.GetInboundRecordAsync(inboundRecordId, trackChanges: false);
@@ -33,7 +38,7 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpGet("by-product/{productInformationId:int}")]
-        [AuthorizePermission("InboundRecords", "View")]
+        //[AuthorizePermission("InboundRecords", "View")]
         public async Task<IActionResult> GetInboundRecordsByProductInformation(int productInformationId)
         {
             var inboundRecords = await _service.InboundRecordService.GetInboundRecordsByProductInformationAsync(productInformationId, trackChanges: false);
@@ -41,7 +46,7 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpGet("by-date")]
-        [AuthorizePermission("InboundRecords", "View")]
+        //[AuthorizePermission("InboundRecords", "View")]
         public async Task<IActionResult> GetInboundRecordsByDate([FromQuery] DateTime inboundDate)
         {
             var inboundRecords = await _service.InboundRecordService.GetInboundRecordsByDateAsync(inboundDate, trackChanges: false);
@@ -50,19 +55,19 @@ namespace QuickStart.Presentation.Controllers
 
         [HttpPost]
         [ServiceFilter(typeof(ValidationFilterAttribute))]
-        [AuthorizePermission("InboundRecords", "Create")]
+        //[AuthorizePermission("InboundRecords", "Create")]
         public async Task<IActionResult> CreateInboundRecord([FromBody] InboundRecordForCreationDto inboundRecord)
         {
-            var createdInboundRecord = await _service.InboundRecordService.CreateInboundRecordAsync(inboundRecord);
+            var createdInboundRecord = await _service.InboundRecordService.CreateInboundRecordAsync(inboundRecord, _httpContextAccessor);
             return CreatedAtRoute("GetInboundRecordById", new { inboundRecordId = createdInboundRecord.Id }, createdInboundRecord);
         }
 
         [HttpPut("{inboundRecordId:int}")]
         [ServiceFilter(typeof(ValidationFilterAttribute))]
-        [AuthorizePermission("InboundRecords", "Update")]
+        //[AuthorizePermission("InboundRecords", "Update")]
         public async Task<IActionResult> UpdateInboundRecord(int inboundRecordId, [FromBody] InboundRecordForUpdateDto inboundRecordForUpdate)
         {
-            await _service.InboundRecordService.UpdateInboundRecordAsync(inboundRecordId, inboundRecordForUpdate, trackChanges: true);
+            await _service.InboundRecordService.UpdateInboundRecordAsync(inboundRecordId, inboundRecordForUpdate, _httpContextAccessor, trackChanges: true);
             return NoContent();
         }
 

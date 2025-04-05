@@ -16,6 +16,7 @@ namespace Repository
         public async Task<IEnumerable<Order>> GetAllOrdersAsync(bool trackChanges) =>
             await FindAll(trackChanges)
                 .OrderBy(o => o.OrderCode)
+                .Include(o => o.CreatedBy)
                 .Include(o => o.Distributor)
                 .ToListAsync();
 

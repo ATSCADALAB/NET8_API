@@ -42,7 +42,7 @@ namespace QuickStart.Presentation.Controllers
 
         [HttpPost]
         [ServiceFilter(typeof(ValidationFilterAttribute))]
-        [AuthorizePermission("ProductInformations", "Create")]
+        //[AuthorizePermission("ProductInformations", "Create")]
         public async Task<IActionResult> CreateProductInformation([FromBody] ProductInformationForCreationDto productInformation)
         {
             var createdProductInformation = await _service.ProductInformationService.CreateProductInformationAsync(productInformation);
@@ -51,7 +51,7 @@ namespace QuickStart.Presentation.Controllers
 
         [HttpPut("{productInformationId:int}")]
         [ServiceFilter(typeof(ValidationFilterAttribute))]
-        [AuthorizePermission("ProductInformations", "Update")]
+        //[AuthorizePermission("ProductInformations", "Update")]
         public async Task<IActionResult> UpdateProductInformation(int productInformationId, [FromBody] ProductInformationForUpdateDto productInformationForUpdate)
         {
             await _service.ProductInformationService.UpdateProductInformationAsync(productInformationId, productInformationForUpdate, trackChanges: true);
@@ -59,7 +59,7 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpDelete("{productInformationId:int}")]
-        [AuthorizePermission("ProductInformations", "Delete")]
+        //[AuthorizePermission("ProductInformations", "Delete")]
         public async Task<IActionResult> DeleteProductInformation(int productInformationId)
         {
             await _service.ProductInformationService.DeleteProductInformationAsync(productInformationId, trackChanges: false);
@@ -76,7 +76,7 @@ namespace QuickStart.Presentation.Controllers
             return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Distributor.xlsx");
         }
         [HttpPost("import")]
-        [AuthorizePermission("ProductInformations", "Create")]
+        //[AuthorizePermission("ProductInformations", "Create")]
         public async Task<IActionResult> ImportProductInformations(IFormFile file)
         {
             if (file == null || file.Length == 0)

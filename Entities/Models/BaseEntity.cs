@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Entities.Identity;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -10,11 +12,13 @@ namespace Entities.Models
 {
     public class BaseEntity
     {
+        public User? CreatedBy { get; set; }
+        public User? UpdatedBy { get; set; }
         [StringLength(450)]
-        public string CreatedById { get; set; }
+        public string? CreatedById { get; set; }
 
         [StringLength(450)]
-        public string UpdatedById { get; set; }
+        public string? UpdatedById { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

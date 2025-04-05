@@ -82,8 +82,8 @@ namespace QuickStart
 
             // Ánh xạ cho Distributor
             CreateMap<Distributor, DistributorDto>()
-    .ForMember(dest => dest.AreaId, opt => opt.MapFrom(src => src.AreaId))
-    .ForMember(dest => dest.Area, opt => opt.MapFrom(src => src.Area));
+                .ForMember(dest => dest.AreaId, opt => opt.MapFrom(src => src.AreaId))
+                .ForMember(dest => dest.Area, opt => opt.MapFrom(src => src.Area));
             CreateMap<DistributorForCreationDto, Distributor>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
@@ -101,7 +101,13 @@ namespace QuickStart
 
             // Ánh xạ cho InboundRecord
             CreateMap<InboundRecord, InboundRecordDto>()
-                .ForMember(dest => dest.ProductInformation, opt => opt.MapFrom(src => src.ProductInformation));
+                .ForMember(dest => dest.ProductInformation, opt => opt.MapFrom(src => src.ProductInformation))
+                .ForMember(dest => dest.CreatedByName, opt => opt.MapFrom(src => src.CreatedById != null
+                    ? $"{src.CreatedBy.FirstName} {src.CreatedBy.LastName}"
+                    : "Unknown"))
+                .ForMember(dest => dest.UpdatedByName, opt => opt.MapFrom(src => src.UpdatedById != null
+                    ? $"{src.UpdatedBy.FirstName} {src.UpdatedBy.LastName}"
+                    : "Unknown"));
             CreateMap<InboundRecordForCreationDto, InboundRecord>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
@@ -112,7 +118,13 @@ namespace QuickStart
                 .ForMember(dest => dest.ProductInformation, opt => opt.Ignore());
             // Ánh xạ cho OutboundRecord
             CreateMap<OutboundRecord, OutboundRecordDto>()
-                .ForMember(dest => dest.ProductInformation, opt => opt.MapFrom(src => src.ProductInformation));
+                .ForMember(dest => dest.ProductInformation, opt => opt.MapFrom(src => src.ProductInformation))
+                .ForMember(dest => dest.CreatedByName, opt => opt.MapFrom(src => src.CreatedById != null
+                    ? $"{src.CreatedBy.FirstName} {src.CreatedBy.LastName}"
+                    : "Unknown"))
+                .ForMember(dest => dest.UpdatedByName, opt => opt.MapFrom(src => src.UpdatedById != null
+                    ? $"{src.UpdatedBy.FirstName} {src.UpdatedBy.LastName}"
+                    : "Unknown"));
             CreateMap<OutboundRecordForCreationDto, OutboundRecord>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
@@ -139,7 +151,13 @@ namespace QuickStart
 
             // Ánh xạ cho Order
             CreateMap<Order, OrderDto>()
-                .ForMember(dest => dest.Distributor, opt => opt.MapFrom(src => src.Distributor));
+                .ForMember(dest => dest.Distributor, opt => opt.MapFrom(src => src.Distributor))
+                .ForMember(dest => dest.CreatedByName, opt => opt.MapFrom(src => src.CreatedById != null
+                    ? $"{src.CreatedBy.FirstName} {src.CreatedBy.LastName}"
+                    : "Unknown"))
+                .ForMember(dest => dest.UpdatedByName, opt => opt.MapFrom(src => src.UpdatedById != null
+                    ? $"{src.UpdatedBy.FirstName} {src.UpdatedBy.LastName}"
+                    : "Unknown")); 
             CreateMap<OrderForCreationDto, Order>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
@@ -161,6 +179,7 @@ namespace QuickStart
             CreateMap<OrderDetail, OrderDetailDto>()
                 .ForMember(dest => dest.Order, opt => opt.MapFrom(src => src.Order))
                 .ForMember(dest => dest.ProductInformation, opt => opt.MapFrom(src => src.ProductInformation));
+
             CreateMap<OrderDetailForCreationDto, OrderDetail>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
@@ -236,7 +255,13 @@ namespace QuickStart
             CreateMap<SensorRecord, SensorRecordDto>()
                 .ForMember(dest => dest.Order, opt => opt.MapFrom(src => src.Order))
                 .ForMember(dest => dest.OrderDetail, opt => opt.MapFrom(src => src.OrderDetail))
-                .ForMember(dest => dest.Line, opt => opt.MapFrom(src => src.Line));
+                .ForMember(dest => dest.Line, opt => opt.MapFrom(src => src.Line))
+                .ForMember(dest => dest.CreatedByName, opt => opt.MapFrom(src => src.CreatedById != null
+                    ? $"{src.CreatedBy.FirstName} {src.CreatedBy.LastName}"
+                    : "Unknown"))
+                .ForMember(dest => dest.UpdatedByName, opt => opt.MapFrom(src => src.UpdatedById != null
+                    ? $"{src.UpdatedBy.FirstName} {src.UpdatedBy.LastName}"
+                    : "Unknown"));
             CreateMap<SensorRecordForCreationDto, SensorRecord>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.Order, opt => opt.Ignore())
@@ -249,12 +274,9 @@ namespace QuickStart
                 .ForMember(dest => dest.Line, opt => opt.Ignore());
 
             // Ánh xạ cho Stock
-            CreateMap<InboundRecord, InboundRecordDto>()
-                .ForMember(dest => dest.ProductInformation, opt => opt.MapFrom(src => src.ProductInformation));
-            CreateMap<InboundRecordForCreationDto, InboundRecord>();
-            CreateMap<OutboundRecord, OutboundRecordDto>()
-                .ForMember(dest => dest.ProductInformation, opt => opt.MapFrom(src => src.ProductInformation));
-            CreateMap<OutboundRecordForCreationDto, OutboundRecord>();
+            
+           
+            //CreateMap<OutboundRecordForCreationDto, OutboundRecord>();
             CreateMap<ProductInformation, ProductInformationDto>();
             CreateMap<Stock, StockDto>();
             CreateMap<StockForCreationDto, Stock>();

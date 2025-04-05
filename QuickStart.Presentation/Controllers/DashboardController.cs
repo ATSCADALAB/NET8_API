@@ -11,7 +11,7 @@ namespace QuickStart.Presentation.Controllers
 {
     [Route("api/dashboard")]
     [ApiController]
-    [Authorize] // Uncomment nếu bạn muốn yêu cầu xác thực
+    //[Authorize] // Uncomment nếu bạn muốn yêu cầu xác thực
     public class DashboardController : ControllerBase
     {
         private readonly IServiceManager _service;

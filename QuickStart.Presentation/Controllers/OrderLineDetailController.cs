@@ -40,7 +40,7 @@ namespace QuickStart.Presentation.Controllers
         }
         [HttpPost]
         [ServiceFilter(typeof(ValidationFilterAttribute))]
-        [AuthorizePermission("OrderLineDetails", "Create")]
+        //[AuthorizePermission("OrderLineDetails", "Create")]
         public async Task<IActionResult> CreateOrder([FromBody] OrderLineDetailForCreationDto orderLineDetail)
         {
             var createdOrderLineDetail = await _service.OrderLineDetailService.CreateOrderLineDetailAsync(orderLineDetail);
@@ -49,7 +49,7 @@ namespace QuickStart.Presentation.Controllers
 
         [HttpPut("{orderLineDetailId:int}")]
         [ServiceFilter(typeof(ValidationFilterAttribute))]
-        [AuthorizePermission("OrderLineDetails", "Update")]
+        //[AuthorizePermission("OrderLineDetails", "Update")]
         public async Task<IActionResult> UpdateOrderLineDetail(int orderLineDetailId, [FromBody] OrderLineDetailForUpdateDto orderLineDetailForUpdate)
         {
             await _service.OrderLineDetailService.UpdateOrderLineDetailAsync(orderLineDetailId, orderLineDetailForUpdate, trackChanges: true);

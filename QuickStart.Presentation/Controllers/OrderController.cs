@@ -15,11 +15,16 @@ namespace QuickStart.Presentation.Controllers
     public class OrderController : ControllerBase
     {
         private readonly IServiceManager _service;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public OrderController(IServiceManager service) => _service = service;
+        public OrderController(IServiceManager service, IHttpContextAccessor contextAccessor)
+        {
+            _service = service;
+            _httpContextAccessor = contextAccessor;
+        }
 
         [HttpGet]
-        [AuthorizePermission("Orders", "View")]
+        //[AuthorizePermission("Orders", "View")]
         public async Task<IActionResult> GetAllOrders()
         {
             var orders = await _service.OrderService.GetAllOrdersAsync(trackChanges: false);
@@ -52,7 +57,7 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpGet("by-distributor/{distributorId:int}")]
-        [AuthorizePermission("Orders", "View")]
+        //[AuthorizePermission("Orders", "View")]
         public async Task<IActionResult> GetOrdersByDistributor(int distributorId)
         {
             var orders = await _service.OrderService.GetOrdersByDistributorAsync(distributorId, trackChanges: false);
@@ -60,7 +65,7 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpGet("by-export-date")]
-        [AuthorizePermission("Orders", "View")]
+        //[AuthorizePermission("Orders", "View")]
         public async Task<IActionResult> GetOrdersByExportDate([FromQuery] DateTime exportDate)
         {
             var orders = await _service.OrderService.GetOrdersByExportDateAsync(exportDate, trackChanges: false);
@@ -72,7 +77,7 @@ namespace QuickStart.Presentation.Controllers
         [AuthorizePermission("Orders", "Create")]
         public async Task<IActionResult> CreateOrder([FromBody] OrderForCreationDto order)
         {
-            var createdOrder = await _service.OrderService.CreateOrderAsync(order);
+            var createdOrder = await _service.OrderService.CreateOrderAsync(order, _httpContextAccessor);
             return CreatedAtRoute("GetOrderById", new { orderId = createdOrder.Id }, createdOrder);
         }
 
@@ -81,7 +86,7 @@ namespace QuickStart.Presentation.Controllers
         [AuthorizePermission("Orders", "Update")]
         public async Task<IActionResult> UpdateOrder(Guid orderId, [FromBody] OrderForUpdateDto orderForUpdate)
         {
-            await _service.OrderService.UpdateOrderAsync(orderId, orderForUpdate, trackChanges: true);
+            await _service.OrderService.UpdateOrderAsync(orderId, orderForUpdate, _httpContextAccessor, trackChanges: true);
             return NoContent();
         }
 
@@ -250,7 +255,7 @@ namespace QuickStart.Presentation.Controllers
         //    }
         //}
         [HttpGet("by-filter")]
-        [AuthorizePermission("Orders", "View")]
+        //[AuthorizePermission("Orders", "View")]
         public async Task<IActionResult> GetOrdersByFilter(
             [FromQuery] DateTime startDate, // Bắt buộc
             [FromQuery] DateTime endDate,   // Bắt buộc
@@ -284,7 +289,7 @@ namespace QuickStart.Presentation.Controllers
         [AuthorizePermission("Orders", "Create")]
         public async Task<IActionResult> ImportOrders(IFormFile file)
         {
-            var orders = await _service.OrderService.ImportOrdersFromExcelAsync(file);
+            var orders = await _service.OrderService.ImportOrdersFromExcelAsync(file, _httpContextAccessor);
             return Ok(orders);
         }
     }

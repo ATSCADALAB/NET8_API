@@ -56,7 +56,7 @@ namespace QuickStart.Presentation.Controllers
 
         [HttpPost]
         //[ServiceFilter(typeof(ValidationFilterAttribute))]
-        [AuthorizePermission("Products", "Create")]
+        //[AuthorizePermission("Products", "Create")]
         public async Task<IActionResult> CreateProduct([FromBody] ProductForCreationDto product)
         {
             var createdProduct = await _service.ProductService.CreateProductAsync(product);
@@ -65,7 +65,7 @@ namespace QuickStart.Presentation.Controllers
 
         [HttpPut("{productId:int}")]
         [ServiceFilter(typeof(ValidationFilterAttribute))]
-        [AuthorizePermission("Products", "Update")]
+        //[AuthorizePermission("Products", "Update")]
         public async Task<IActionResult> UpdateProduct(int productId, [FromBody] ProductForUpdateDto productForUpdate)
         {
             await _service.ProductService.UpdateProductAsync(productId, productForUpdate, trackChanges: true);
@@ -73,7 +73,7 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpDelete("{productId:int}")]
-        [AuthorizePermission("Products", "Delete")]
+        //[AuthorizePermission("Products", "Delete")]
         public async Task<IActionResult> DeleteProduct(int productId)
         {
             await _service.ProductService.DeleteProductAsync(productId, trackChanges: false);

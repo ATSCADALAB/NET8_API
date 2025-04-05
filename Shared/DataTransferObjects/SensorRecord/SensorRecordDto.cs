@@ -14,6 +14,10 @@ namespace Shared.DataTransferObjects.SensorRecord
         public decimal SensorWeight { get; init; }
         public DateTime RecordTime { get; init; }
         public int Status {  get; init; }
+        public DateTime CreatedAt { get; init; }
+        public DateTime UpdatedAt { get; init; }
+        public string? CreatedByName { get; set; }
+        public string? UpdatedByName { get; set; }
 
         // Thông tin liên quan
         public OrderDto Order { get; init; }
