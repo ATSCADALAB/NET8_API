@@ -8,7 +8,7 @@ namespace QuickStart.Presentation.Controllers
 {
     [Route("api/areas")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class AreaController : ControllerBase
     {
         private readonly IServiceManager _service;
@@ -16,7 +16,7 @@ namespace QuickStart.Presentation.Controllers
         public AreaController(IServiceManager service) => _service = service;
 
         [HttpGet]
-        [AuthorizePermission("Areas", "View")]
+        //[AuthorizePermission("Areas", "View")]
         public async Task<IActionResult> GetAllAreas()
         {
             var areas = await _service.AreaService.GetAllAreasAsync(trackChanges: false);
@@ -24,7 +24,7 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpGet("{areaId:int}", Name = "GetAreaById")]
-        [AuthorizePermission("Areas", "View")]
+        //[AuthorizePermission("Areas", "View")]
         public async Task<IActionResult> GetArea(int areaId)
         {
             var area = await _service.AreaService.GetAreaAsync(areaId, trackChanges: false);
@@ -32,7 +32,7 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpGet("code/{areaCode}")]
-        [AuthorizePermission("Areas", "View")]
+        //[AuthorizePermission("Areas", "View")]
         public async Task<IActionResult> GetAreaByCode(string areaCode)
         {
             var area = await _service.AreaService.GetAreaByCodeAsync(areaCode, trackChanges: false);

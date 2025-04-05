@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Entities.Models
 {
     [Table("InboundRecords")]
-    public class InboundRecord
+    public class InboundRecord : BaseEntity
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -23,7 +23,7 @@ namespace Entities.Models
 
         public DateTime InboundDate { get; set; } = DateTime.UtcNow;
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        //public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Mối quan hệ với ProductInformation (many-to-one)
         [ForeignKey(nameof(ProductInformationId))]

@@ -39,9 +39,25 @@ namespace Service
 
         public async Task<IEnumerable<OrderDetailDto>> GetOrderDetailsByOrderAsync(Guid orderId, bool trackChanges)
         {
-            var orderDetails = await _repository.OrderDetail.GetOrderDetailsByOrderIdAsync(orderId, trackChanges);
-            var orderDetailsDto = _mapper.Map<IEnumerable<OrderDetailDto>>(orderDetails);
-            return orderDetailsDto;
+            try
+            {
+                var orderDetails = await _repository.OrderDetail.GetOrderDetailsByOrderIdAsync(orderId, trackChanges);
+                try
+                {
+                    var orderDetailsDto = _mapper.Map<IEnumerable<OrderDetailDto>>(orderDetails);
+                    return orderDetailsDto;
+                }
+                catch (Exception mapEx)
+                {
+                    throw new Exception("AutoMapper mapping failed", mapEx);
+                }
+                //return orderDetailsDto;
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+            
         }
 
         public async Task<IEnumerable<OrderDetailDto>> GetOrderDetailsByProductAsync(int productInformationId, bool trackChanges)

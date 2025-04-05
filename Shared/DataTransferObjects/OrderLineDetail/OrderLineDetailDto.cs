@@ -14,7 +14,7 @@ namespace Shared.DataTransferObjects.OrderLineDetail
         public DateTime CreatedAt { get; init; }
 
         // Thông tin liên quan
-        public OrderDto Order { get; init; }
+        public OrderDto? Order { get; init; }
         public LineDto Line { get; init; }
     }
 }

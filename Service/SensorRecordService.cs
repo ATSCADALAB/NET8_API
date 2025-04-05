@@ -2,6 +2,7 @@
 using Contracts;
 using Entities.Exceptions.SensorRecord;
 using Entities.Models;
+using Microsoft.AspNetCore.Http;
 using Service.Contracts;
 using Shared.DataTransferObjects.SensorRecord;
 using System;
@@ -65,13 +66,14 @@ namespace Service
             return sensorRecordsDto;
         }
 
-        public async Task<SensorRecordDto> CreateSensorRecordAsync(SensorRecordForCreationDto sensorRecord)
+        public async Task<SensorRecordDto> CreateSensorRecordAsync(SensorRecordForCreationDto sensorRecord, IHttpContextAccessor httpContextAccessor)
         {
             //sensorRecord.RecordTime=Datez
             if (sensorRecord == null)
                 throw new ArgumentNullException(nameof(sensorRecord), "SensorRecordForCreationDto cannot be null.");
 
             var sensorRecordEntity = _mapper.Map<SensorRecord>(sensorRecord);
+            sensorRecordEntity.SetCreatedBy(httpContextAccessor);
             _repository.SensorRecord.CreateSensorRecord(sensorRecordEntity);
             await _repository.SaveAsync();
 
@@ -79,9 +81,10 @@ namespace Service
             return sensorRecordToReturn;
         }
 
-        public async Task UpdateSensorRecordAsync(int sensorRecordId, SensorRecordForUpdateDto sensorRecordForUpdate, bool trackChanges)
+        public async Task UpdateSensorRecordAsync(int sensorRecordId, SensorRecordForUpdateDto sensorRecordForUpdate, IHttpContextAccessor httpContextAccessor, bool trackChanges)
         {
             var sensorRecord = await GetSensorRecordAndCheckIfItExists(sensorRecordId, trackChanges);
+            sensorRecord.SetUpdatedBy(httpContextAccessor);
             _mapper.Map(sensorRecordForUpdate, sensorRecord);
             await _repository.SaveAsync();
         }

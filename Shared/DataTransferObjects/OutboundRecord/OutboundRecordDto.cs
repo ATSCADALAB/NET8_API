@@ -10,6 +10,8 @@ namespace Shared.DataTransferObjects.OutboundRecord
         public decimal QuantityWeight { get; init; }
         public DateTime OutboundDate { get; init; }
         public DateTime CreatedAt { get; init; }
+        public string? CreatedByName { get; set; }
+        public string? UpdatedByName { get; set; }
 
         // Thông tin liên quan
         public ProductInformationDto ProductInformation { get; init; }

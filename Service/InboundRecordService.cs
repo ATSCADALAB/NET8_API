@@ -2,6 +2,7 @@
 using Contracts;
 using Entities.Exceptions.InboundRecord;
 using Entities.Models;
+using Microsoft.AspNetCore.Http;
 using Service.Contracts;
 using Shared.DataTransferObjects.InboundRecord;
 using System;
@@ -47,12 +48,13 @@ namespace Service
             return _mapper.Map<IEnumerable<InboundRecordDto>>(inboundRecords);
         }
 
-        public async Task<InboundRecordDto> CreateInboundRecordAsync(InboundRecordForCreationDto inboundRecord)
+        public async Task<InboundRecordDto> CreateInboundRecordAsync(InboundRecordForCreationDto inboundRecord, IHttpContextAccessor httpContextAccessor)
         {
             if (inboundRecord == null)
                 throw new ArgumentNullException(nameof(inboundRecord), "InboundRecordForCreationDto cannot be null.");
 
             var inboundEntity = _mapper.Map<InboundRecord>(inboundRecord);
+            inboundEntity.SetCreatedBy(httpContextAccessor);
             _repository.InboundRecord.CreateInboundRecord(inboundEntity);
 
             // Cập nhật Stock
@@ -79,9 +81,10 @@ namespace Service
             return _mapper.Map<InboundRecordDto>(inboundEntity);
         }
 
-        public async Task UpdateInboundRecordAsync(int inboundRecordId, InboundRecordForUpdateDto inboundRecordForUpdate, bool trackChanges)
+        public async Task UpdateInboundRecordAsync(int inboundRecordId, InboundRecordForUpdateDto inboundRecordForUpdate, IHttpContextAccessor httpContextAccessor, bool trackChanges)
         {
             var inboundRecord = await GetInboundRecordAndCheckIfItExists(inboundRecordId, trackChanges);
+            inboundRecord.SetUpdatedBy(httpContextAccessor);
             _mapper.Map(inboundRecordForUpdate, inboundRecord);
             await _repository.SaveAsync();
         }

@@ -8,7 +8,7 @@ namespace QuickStart.Presentation.Controllers
 {
     [Route("api/lines")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class LineController : ControllerBase
     {
         private readonly IServiceManager _service;
@@ -23,7 +23,7 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpGet("{lineId:int}", Name = "GetLineById")]
-        [AuthorizePermission("Lines", "View")]
+        //[AuthorizePermission("Lines", "View")]
         public async Task<IActionResult> GetLine(int lineId)
         {
             var line = await _service.LineService.GetLineAsync(lineId, trackChanges: false);
@@ -31,7 +31,7 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpGet("number/{lineNumber:int}")]
-        [AuthorizePermission("Lines", "View")]
+        //AuthorizePermission("Lines", "View")]
         public async Task<IActionResult> GetLineByNumber(int lineNumber)
         {
             var line = await _service.LineService.GetLineByNumberAsync(lineNumber, trackChanges: false);

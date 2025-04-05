@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using QuickStart.Presentation.ActionFilters;
 using Service.Contracts;
@@ -9,15 +10,19 @@ namespace QuickStart.Presentation.Controllers
 {
     [Route("api/outbound-records")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class OutboundRecordController : ControllerBase
     {
         private readonly IServiceManager _service;
-
-        public OutboundRecordController(IServiceManager service) => _service = service;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        public OutboundRecordController(IServiceManager service, IHttpContextAccessor contextAccessor)
+        {
+            _service = service;
+            _httpContextAccessor = contextAccessor;
+        }
 
         [HttpGet]
-        [AuthorizePermission("OutboundRecords", "View")]
+        //[AuthorizePermission("OutboundRecords", "View")]
         public async Task<IActionResult> GetAllOutboundRecords()
         {
             var outboundRecords = await _service.OutboundRecordService.GetAllOutboundRecordsAsync(trackChanges: false);
@@ -25,7 +30,7 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpGet("{outboundRecordId:int}", Name = "GetOutboundRecordById")]
-        [AuthorizePermission("OutboundRecords", "View")]
+        //[AuthorizePermission("OutboundRecords", "View")]
         public async Task<IActionResult> GetOutboundRecord(int outboundRecordId)
         {
             var outboundRecord = await _service.OutboundRecordService.GetOutboundRecordAsync(outboundRecordId, trackChanges: false);
@@ -33,7 +38,7 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpGet("by-product/{productInformationId:int}")]
-        [AuthorizePermission("OutboundRecords", "View")]
+        //[AuthorizePermission("OutboundRecords", "View")]
         public async Task<IActionResult> GetOutboundRecordsByProductInformation(int productInformationId)
         {
             var outboundRecords = await _service.OutboundRecordService.GetOutboundRecordsByProductInformationAsync(productInformationId, trackChanges: false);
@@ -41,7 +46,7 @@ namespace QuickStart.Presentation.Controllers
         }
 
         [HttpGet("by-date")]
-        [AuthorizePermission("OutboundRecords", "View")]
+        //[AuthorizePermission("OutboundRecords", "View")]
         public async Task<IActionResult> GetOutboundRecordsByDate([FromQuery] DateTime outboundDate)
         {
             var outboundRecords = await _service.OutboundRecordService.GetOutboundRecordsByDateAsync(outboundDate, trackChanges: false);
@@ -50,10 +55,10 @@ namespace QuickStart.Presentation.Controllers
 
         [HttpPost]
         [ServiceFilter(typeof(ValidationFilterAttribute))]
-        [AuthorizePermission("OutboundRecords", "Create")]
+        //[AuthorizePermission("OutboundRecords", "Create")]
         public async Task<IActionResult> CreateOutboundRecord([FromBody] OutboundRecordForCreationDto outboundRecord)
         {
-            var createdOutboundRecord = await _service.OutboundRecordService.CreateOutboundRecordAsync(outboundRecord);
+            var createdOutboundRecord = await _service.OutboundRecordService.CreateOutboundRecordAsync(outboundRecord,_httpContextAccessor);
             return CreatedAtRoute("GetOutboundRecordById", new { outboundRecordId = createdOutboundRecord.Id }, createdOutboundRecord);
         }
     }

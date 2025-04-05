@@ -17,5 +17,7 @@ namespace Shared.DataTransferObjects.OrderDetail
         public int ReplacedUnits { get; init; }
         public decimal ReplacedWeight { get; init; }
         public DateTime CreatedAt { get; init; }
+        //public string? CreatedByName {  get; init; }
+        //public string? UpdatedByName {  get; init; }
     }
 }

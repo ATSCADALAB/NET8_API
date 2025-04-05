@@ -16,12 +16,18 @@ namespace Repository
         public async Task<IEnumerable<OrderDetail>> GetAllOrderDetailsAsync(bool trackChanges) =>
             await FindAll(trackChanges)
                 .Include(od => od.Order)
+                    .ThenInclude(o => o.CreatedBy)
+                .Include(od => od.Order)
+                    .ThenInclude(o => o.UpdatedBy)
                 .Include(od => od.ProductInformation)
                 .ToListAsync();
 
         public async Task<OrderDetail> GetOrderDetailByIdAsync(int orderDetailId, bool trackChanges) =>
             await FindByCondition(od => od.Id == orderDetailId, trackChanges)
                 .Include(od => od.Order)
+                    .ThenInclude(o => o.CreatedBy)
+                .Include(od => od.Order)
+                    .ThenInclude(o => o.UpdatedBy)
                 .Include(od => od.ProductInformation)
                 .SingleOrDefaultAsync();
 
@@ -30,12 +36,19 @@ namespace Repository
                 .Include(od => od.Order)
                     .ThenInclude(o => o.Distributor)  //Mapping tới Distributor
                     .ThenInclude(o => o.Area) //Mapping tới Area
+                .Include(od => od.Order)
+                    .ThenInclude(o => o.CreatedBy)
+                .Include(od => od.Order)
+                    .ThenInclude(o => o.UpdatedBy)
                 .Include(od => od.ProductInformation)
                 .ToListAsync();
 
         public async Task<IEnumerable<OrderDetail>> GetOrderDetailsByProductAsync(int productInformationId, bool trackChanges) =>
             await FindByCondition(od => od.ProductInformationId == productInformationId, trackChanges)
                 .Include(od => od.Order)
+                    .ThenInclude(o => o.CreatedBy)
+                .Include(od => od.Order)
+                    .ThenInclude(o => o.UpdatedBy)
                 .Include(od => od.ProductInformation)
                 .ToListAsync();
 

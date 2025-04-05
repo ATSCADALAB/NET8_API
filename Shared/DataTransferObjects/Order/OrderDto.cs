@@ -1,4 +1,6 @@
-﻿using Shared.DataTransferObjects.Distributor;
+﻿
+using Shared.DataTransferObjects.Distributor;
+using Shared.DataTransferObjects.User;
 
 namespace Shared.DataTransferObjects.Order
 {
@@ -15,8 +17,11 @@ namespace Shared.DataTransferObjects.Order
         public int DistributorId { get; init; }
         public DateTime CreatedAt { get; init; }
         public DateTime UpdatedAt { get; init; }
+        public string? CreatedByName { get; set; }
+        public string? UpdatedByName { get; set; }
 
         // Thông tin liên quan
         public DistributorDto Distributor { get; init; }
+        //public UserDto User { get; init; }
     }
 }

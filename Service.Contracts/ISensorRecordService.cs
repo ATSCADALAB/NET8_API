@@ -1,4 +1,5 @@
-﻿using Shared.DataTransferObjects.SensorRecord;
+﻿using Microsoft.AspNetCore.Http;
+using Shared.DataTransferObjects.SensorRecord;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -13,8 +14,8 @@ namespace Service.Contracts
         Task<IEnumerable<SensorRecordDto>> GetSensorRecordsByOrderDetailAsync(int orderDetailId, bool trackChanges);
         Task<IEnumerable<SensorRecordDto>> GetSensorRecordsByLineAsync(int lineId, bool trackChanges);
         Task<IEnumerable<SensorRecordDto>> GetSensorRecordsByDateAsync(DateTime recordDate, bool trackChanges);
-        Task<SensorRecordDto> CreateSensorRecordAsync(SensorRecordForCreationDto sensorRecord);
-        Task UpdateSensorRecordAsync(int sensorRecordId, SensorRecordForUpdateDto sensorRecordForUpdate, bool trackChanges);
+        Task<SensorRecordDto> CreateSensorRecordAsync(SensorRecordForCreationDto sensorRecord, IHttpContextAccessor httpContextAccessor);
+        Task UpdateSensorRecordAsync(int sensorRecordId, SensorRecordForUpdateDto sensorRecordForUpdate, IHttpContextAccessor httpContextAccessor, bool trackChanges);
         Task DeleteSensorRecordAsync(int sensorRecordId, bool trackChanges);
     }
 }

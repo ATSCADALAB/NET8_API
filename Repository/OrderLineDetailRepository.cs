@@ -16,6 +16,9 @@ namespace Repository
         public async Task<IEnumerable<OrderLineDetail>> GetAllOrderLineDetailsAsync(bool trackChanges) =>
             await FindAll(trackChanges)
                 .Include(old => old.Order)
+                    .ThenInclude(o=>o.CreatedBy)
+                .Include(old => old.Order)
+                    .ThenInclude(o => o.UpdatedBy)
                 .Include(old => old.Line)
                 .OrderBy(old => old.SequenceNumber)
                 .ToListAsync();
@@ -23,12 +26,18 @@ namespace Repository
         public async Task<OrderLineDetail> GetOrderLineDetailByIdAsync(int orderLineDetailId, bool trackChanges) =>
             await FindByCondition(old => old.Id == orderLineDetailId, trackChanges)
                 .Include(old => old.Order)
+                    .ThenInclude(o => o.CreatedBy)
+                .Include(old => old.Order)
+                    .ThenInclude(o => o.UpdatedBy)
                 .Include(old => old.Line)
                 .SingleOrDefaultAsync();
 
         public async Task<IEnumerable<OrderLineDetail>> GetOrderLineDetailsByOrderIdAsync(Guid orderId, bool trackChanges) =>
             await FindByCondition(old => old.OrderId == orderId, trackChanges)
                 .Include(old => old.Order)
+                    .ThenInclude(o => o.CreatedBy)
+                .Include(old => old.Order)
+                    .ThenInclude(o => o.UpdatedBy)
                 .Include(old => old.Line)
                 .OrderBy(old => old.SequenceNumber)
                 .ToListAsync();
@@ -36,6 +45,9 @@ namespace Repository
         public async Task<IEnumerable<OrderLineDetail>> GetOrderLineDetailsByLineIdAsync(int lineId, bool trackChanges) =>
             await FindByCondition(old => old.LineId == lineId, trackChanges)
                 .Include(old => old.Order)
+                    .ThenInclude(o => o.CreatedBy)
+                .Include(old => old.Order)
+                    .ThenInclude(o => o.UpdatedBy)
                 .Include(old => old.Line)
                 .OrderBy(old => old.SequenceNumber)
                 .ToListAsync();

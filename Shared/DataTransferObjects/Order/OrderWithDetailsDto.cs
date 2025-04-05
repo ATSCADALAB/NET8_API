@@ -18,6 +18,8 @@ namespace Shared.DataTransferObjects.Order
         public string Area { get; init; }
         public DateTime CreatedAt { get; init; }
         public DateTime? UpdatedAt { get; init; }
+        public string? CreatedByName {  get; init; }
+        public string? UpdatedByName {  get; init; }
         public OrderDetailWithProductDto OrderDetail { get; init; } // Chỉ 1 OrderDetail thay vì danh sách
     }
 }

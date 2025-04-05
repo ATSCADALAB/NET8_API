@@ -1,4 +1,5 @@
-﻿using Shared.DataTransferObjects.OutboundRecord;
+﻿using Microsoft.AspNetCore.Http;
+using Shared.DataTransferObjects.OutboundRecord;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -11,6 +12,6 @@ namespace Service.Contracts
         Task<OutboundRecordDto> GetOutboundRecordAsync(int outboundRecordId, bool trackChanges);
         Task<IEnumerable<OutboundRecordDto>> GetOutboundRecordsByProductInformationAsync(int productInformationId, bool trackChanges);
         Task<IEnumerable<OutboundRecordDto>> GetOutboundRecordsByDateAsync(DateTime outboundDate, bool trackChanges);
-        Task<OutboundRecordDto> CreateOutboundRecordAsync(OutboundRecordForCreationDto outboundRecord);
+        Task<OutboundRecordDto> CreateOutboundRecordAsync(OutboundRecordForCreationDto outboundRecord, IHttpContextAccessor httpContextAccessor);
     }
 }
