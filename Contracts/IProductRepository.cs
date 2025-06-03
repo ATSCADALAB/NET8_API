@@ -19,7 +19,7 @@ namespace Contracts
         Task<IEnumerable<Product>> GetProductsByOrderDetailIdAsync(int orderDetailId, bool trackChanges);
 
         Task<IEnumerable<Product>> GetProductsByDistributorIdAsync(int distributorId, bool trackChanges);
-
+        Task<List<string>> GetExistingTagIdsAsync(List<string> tagIds);
         // Tạo sản phẩm mới
         void CreateProduct(Product product);
 

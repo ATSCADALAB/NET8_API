@@ -154,6 +154,7 @@ namespace Repository
         public DbSet<Stock> Stock { get; set; } = default!;
         public DbSet<InboundRecord> InboundRecords { get; set; } = default!;
         public DbSet<OutboundRecord> OutboundRecords { get; set; } = default!;
+        public DbSet<BagWeightInfo> BagWeightInfos { get; set; } = default!;
 
         // DbSet cho các bảng cũ
         public DbSet<AuditLog> AuditLogs { get; set; } = default!;

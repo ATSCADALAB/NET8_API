@@ -53,7 +53,7 @@ builder.Services.AddScoped<AuthorizePermissionAttribute>(provider =>
     ));
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 
-// Đăng ký Background Service cho WCF Polling
+//Đăng ký Background Service cho WCF Polling
 builder.Services.AddHostedService<WcfPollingService>();
 
 builder.Services.AddControllers()
@@ -115,11 +115,11 @@ app.UseEndpoints(endpoints =>
     endpoints.MapHub<DataHub>("/dataHub");
 });
 
-app.UseSwagger();
-app.UseSwaggerUI(s =>
-{
-    s.SwaggerEndpoint("/swagger/v1/swagger.json", "Matech Coding API v1");
-});
+//app.UseSwagger();
+//app.UseSwaggerUI(s =>
+//{
+//    s.SwaggerEndpoint("/swagger/v1/swagger.json", "Matech Coding API v1");
+//});
 
 app.Use(next => context =>
 {
@@ -133,4 +133,4 @@ if (app.Environment.IsDevelopment())
 app.MapControllers();
 app.MapFallbackToController("Index", "Fallback");
 
-app.Run();
+   app.Run();

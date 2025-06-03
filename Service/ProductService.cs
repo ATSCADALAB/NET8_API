@@ -1,9 +1,12 @@
 ﻿using AutoMapper;
+using ClosedXML.Excel;
 using Contracts;
 using Entities.Exceptions.Product;
 using Entities.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using MySqlConnector;
+using Repository;
 using Service.Contracts;
 using Shared.DataTransferObjects.Product;
 using System;
@@ -26,7 +29,66 @@ namespace Service
             _mapper = mapper;
             _connectionString = configuration.GetConnectionString("sqlConnection");
         }
+        public async Task<List<ProductCreationResult>> CreateProductsBulkAsync(List<ProductForCreationDto> products)
+        {
+            if (products == null || !products.Any())
+                throw new ArgumentNullException(nameof(products), "Product list cannot be null or empty.");
 
+            var results = new List<ProductCreationResult>();
+            var tagIds = products.Select(p => p.TagID).ToHashSet().ToList();
+
+            // Kiểm tra trùng TagID hàng loạt
+            var existingTagIds = await _repository.Product.GetExistingTagIdsAsync(tagIds);
+            var duplicateTagIds = existingTagIds.ToHashSet();
+
+            foreach (var product in products)
+            {
+                if (duplicateTagIds.Contains(product.TagID))
+                {
+                    results.Add(new ProductCreationResult
+                    {
+                        TagID = product.TagID,
+                        IsSuccess = false,
+                        ErrorMessage = $"TagID {product.TagID} already exists."
+                    });
+                    continue;
+                }
+
+                try
+                {
+                    var productEntity = _mapper.Map<Product>(product);
+                    _repository.Product.CreateProduct(productEntity);
+                    await _repository.SaveAsync();
+
+                    results.Add(new ProductCreationResult
+                    {
+                        TagID = product.TagID,
+                        IsSuccess = true,
+                        ProductId = productEntity.Id
+                    });
+                }
+                catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("unique") ?? false)
+                {
+                    results.Add(new ProductCreationResult
+                    {
+                        TagID = product.TagID,
+                        IsSuccess = false,
+                        ErrorMessage = $"TagID {product.TagID} already exists (race condition)."
+                    });
+                }
+                catch (Exception ex)
+                {
+                    results.Add(new ProductCreationResult
+                    {
+                        TagID = product.TagID,
+                        IsSuccess = false,
+                        ErrorMessage = ex.Message
+                    });
+                }
+            }
+
+            return results;
+        }
         public async Task<IEnumerable<ProductDto>> GetAllProductsAsync(bool trackChanges)
         {
             try
@@ -122,22 +184,23 @@ namespace Service
             return productsDto;
         }
 
-        public async Task<ProductDto> CreateProductAsync(ProductForCreationDto product)
+        public async Task<ProductDto> CreateProductsAsync(ProductForCreationDto products)
         {
-            if (product == null)
-                throw new ArgumentNullException(nameof(product), "ProductForCreationDto cannot be null.");
+            if (products == null)
+                throw new ArgumentNullException(nameof(products), "Product list cannot be null or empty.");
 
-            var productEntity = _mapper.Map<Product>(product);
-            _repository.Product.CreateProduct(productEntity);
+            var product = _mapper.Map<Product>(products);
+             _repository.Product.CreateProduct(product);
             await _repository.SaveAsync();
 
-            var productToReturn = _mapper.Map<ProductDto>(productEntity);
-            return productToReturn;
+            var productsToReturn = _mapper.Map<ProductDto>(product);
+            return productsToReturn;
         }
 
         public async Task UpdateProductAsync(int productId, ProductForUpdateDto productForUpdate, bool trackChanges)
         {
             var product = await GetProductAndCheckIfItExists(productId, trackChanges);
+
             _mapper.Map(productForUpdate, product);
             await _repository.SaveAsync();
         }
@@ -155,6 +218,103 @@ namespace Service
             if (product is null)
                 throw new ProductNotFoundException(id);
             return product;
+        }
+        public async Task<IEnumerable<ProductExportDto>> GetExportDataAsync(ProductExportQueryDto filter)
+        {
+            var result = new List<ProductExportDto>();
+
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                await connection.OpenAsync();
+                using var command = new MySqlCommand("sp_GetProductExportDetails", connection)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
+
+                command.Parameters.AddWithValue("@p_from_date", filter.FromDate.AddDays(1).Date);
+                command.Parameters.AddWithValue("@p_to_date", filter.ToDate.AddHours(23).AddMinutes(59).AddSeconds(59));
+                command.Parameters.AddWithValue("@p_distributor_id", (object?)filter.DistributorId ?? DBNull.Value);
+                command.Parameters.AddWithValue("@p_product_info_id", (object?)filter.ProductInformationId ?? DBNull.Value);
+                command.Parameters.AddWithValue("@p_group_by", filter.GroupBy);
+
+                using var reader = await command.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    result.Add(new ProductExportDto
+                    {
+                        TagID = reader["TagID"].ToString(),
+                        DistributorName = reader["DistributorName"].ToString(),
+                        ProductName = reader["ProductName"].ToString(),
+                        ProductCode = reader["ProductCode"].ToString(),
+                        ShipmentDate = Convert.ToDateTime(reader["ShipmentDate"]),
+                        GroupedPeriod = reader["GroupedPeriod"]?.ToString()
+                    });
+                }
+            }
+
+            return result;
+        }
+        public async Task<byte[]> ExportProductReportAsync(ProductExportQueryDto filter)
+        {
+            if (filter == null)
+            {
+                _logger.LogInfo("Filter is null for Product Export Report.");
+                return null;
+            }
+
+            var data = await GetExportDataAsync(filter);
+            if (data == null || !data.Any())
+            {
+                _logger.LogInfo("No data to export for Product Export Report.");
+                return null;
+            }
+
+            string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "XuatBaoCaoTag.xlsx");
+
+            try
+            {
+                using (var workbook = new XLWorkbook(templatePath))
+                {
+                    var worksheet = workbook.Worksheet(1); // Lấy sheet đầu tiên
+
+                    // Fill thông tin thời gian
+                    worksheet.Cell("C3").Value = $"Từ ngày: {filter.FromDate:dd/MM/yyyy}";
+                    worksheet.Cell("E3").Value = $"đến ngày: {filter.ToDate:dd/MM/yyyy}";
+                    worksheet.Cell("B4").Value = data.Count().ToString();
+                    // Fill dữ liệu
+                    int currentRow = 7;
+                    foreach (var item in data)
+                    {
+                        worksheet.Cell(currentRow, 1).Value = item.TagID;
+                        worksheet.Cell(currentRow, 2).Value = item.DistributorName;
+                        worksheet.Cell(currentRow, 4).Value = item.ProductName;
+                        worksheet.Cell(currentRow, 3).Value = item.ProductCode;
+                        worksheet.Cell(currentRow, 5).Value = item.ShipmentDate.ToString("dd/MM/yyyy");
+
+                        var range = worksheet.Range(currentRow, 1, currentRow, 5);
+                        range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                        range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+                        worksheet.Range(currentRow, 1, currentRow, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+
+                        currentRow++;
+                    }
+
+                    // Auto-fit columns
+                    worksheet.Columns().AdjustToContents();
+
+                    // Convert to byte array
+                    using (var stream = new MemoryStream())
+                    {
+                        workbook.SaveAs(stream);
+                        return stream.ToArray();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error exporting Product Export Report: {ex.Message}");
+                return null;
+            }
         }
     }
 }

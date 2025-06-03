@@ -6,6 +6,7 @@ namespace Shared.DataTransferObjects.Order
     public record OrderWithDetailsDto
     {
         public Guid Id { get; init; }
+        public string LineID { get; init; }
         public string OrderCode { get; init; }
         public DateTime ExportDate { get; init; }
         public string VehicleNumber { get; init; }

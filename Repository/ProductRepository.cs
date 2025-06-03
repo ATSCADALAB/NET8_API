@@ -11,7 +11,13 @@ namespace Repository
         public ProductRepository(RepositoryContext repositoryContext) : base(repositoryContext)
         {
         }
-
+        public async Task<List<string>> GetExistingTagIdsAsync(List<string> tagIds)
+        {
+            return await FindAll(false)
+                .Where(p => tagIds.Contains(p.TagID))
+                .Select(p => p.TagID)
+                .ToListAsync();
+        }
         public async Task<IEnumerable<Product>> GetAllProductsAsync(bool trackChanges) =>
             await FindAll(trackChanges)
                 .OrderBy(p => p.TagID)

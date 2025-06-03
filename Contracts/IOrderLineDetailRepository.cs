@@ -15,7 +15,6 @@ namespace Contracts
 
         // Lấy danh sách chi tiết dòng theo Order ID
         Task<IEnumerable<OrderLineDetail>> GetOrderLineDetailsByOrderIdAsync(Guid orderId, bool trackChanges);
-
         // Lấy danh sách chi tiết dòng theo Line ID
         Task<IEnumerable<OrderLineDetail>> GetOrderLineDetailsByLineIdAsync(int lineId, bool trackChanges);
 

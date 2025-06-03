@@ -16,7 +16,7 @@ namespace QuickStart.Presentation.Controllers
         public OrderDetailController(IServiceManager service) => _service = service;
 
         [HttpGet]
-        //[AuthorizePermission("OrderDetails", "View")]
+        [AuthorizePermission("OrderDetails", "View")]
         public async Task<IActionResult> GetAllOrderDetails()
         {
             var orderDetails = await _service.OrderDetailService.GetAllOrderDetailsAsync(trackChanges: false);
@@ -71,6 +71,12 @@ namespace QuickStart.Presentation.Controllers
         {
             await _service.OrderDetailService.DeleteOrderDetailAsync(orderDetailId, trackChanges: false);
             return NoContent();
+        }
+        [HttpGet("grouped-by-line")]
+        public async Task<IActionResult> GetOrdersGroupedByLine()
+        {
+            var ordersGroupedByLine = await _service.OrderLineDetailService.GetOrdersGroupedByLineAsync();
+            return Ok(ordersGroupedByLine);
         }
     }
 }

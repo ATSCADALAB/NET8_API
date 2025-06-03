@@ -18,6 +18,8 @@ using Org.BouncyCastle.Asn1.Ocsp;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Shared.DataTransferObjects.Wcf;
+using Shared.DataTransferObjects.Authentication;
+using Contracts;
 
 namespace QuickStart.Service
 {
@@ -33,15 +35,17 @@ namespace QuickStart.Service
         private bool _isPolling;
         private string _address;
         private string _addressIWebAPI;
+        private readonly IRepositoryManager _repository;
 
-        public WcfService(IConfiguration configuration, IHubContext<DataHub> hubContext, IMemoryCache cache, IHttpClientFactory httpClientFactory)
+        public WcfService(IConfiguration configuration, IHubContext<DataHub> hubContext, IMemoryCache cache, IHttpClientFactory httpClientFactory, IRepositoryManager repository)
         {
             _configuration = configuration;
             _hubContext = hubContext;
             _cache = cache;
             _httpClientFactory = httpClientFactory;
-            _address = _configuration["WcfService:Address"] ?? "113.161.76.105:9002";
-            _addressIWebAPI = _configuration["WcfService:AddressIWebAPI"] ?? "http://113.161.76.105:9006/api/atscada";
+            _address = _configuration["WcfService:Address"] ?? "10.62.0.21:9002";
+            _addressIWebAPI = _configuration["WcfService:AddressIWebAPI"] ?? "http://10.62.0.21:9004/api/atscada";
+            _repository = repository;
             Start();
         }
 
@@ -74,7 +78,7 @@ namespace QuickStart.Service
 
                 var encryptedNames = tagNames.Select(n => n.EncryptAddress()).ToArray();
                 var result = await Task.Run(() => _channel.Read(encryptedNames));
-                var decryptedResult = result.Decrypt(); // Sử dụng extension method
+                var decryptedResult = result.Decrypt(); 
                 return decryptedResult?.Select(r => new WcfDataDto
                 {
                     Name = r.Name,
@@ -148,35 +152,175 @@ namespace QuickStart.Service
             _channelFactory.Close();
             IsActive = false;
         }
-
-        public async Task StartResetValue(IEnumerable<WcfDataForUpdateDto> requestList)
+        public async Task<bool> StartResetValue(IEnumerable<WcfDataForUpdateDto> requestList)
         {
             try
             {
-                // Lấy token từ cache (đã lưu khi login)
-                if (!_cache.TryGetValue("IWebAPIToken", out string? tokenIWebAPI) || string.IsNullOrEmpty(tokenIWebAPI))
+                requestList.First().ValueToWrite = "0";
+                var line = requestList.First().Name[requestList.First().Name.Length - 1];
+                var confirm = new WcfDataForUpdateDto
                 {
-                    throw new UnauthorizedAccessException("Token không tồn tại hoặc đã hết hạn.");
+                    Name = $"SettingLine{line}.Confirm",
+                    ValueToWrite = "0"
+                };
+                var setting = new WcfDataForUpdateDto
+                {
+                    Name = $"SettingLine{line}.Setting",
+                    ValueToWrite = "0"
+                };
+                var mutableList = requestList.ToList();
+                mutableList.Add(confirm);
+                mutableList.Add(setting);
+
+                // Lấy token từ cache hoặc khởi tạo rỗng
+                string token = _cache.Get<string>("IWebAPIToken") ?? string.Empty;
+
+                // Hàm hỗ trợ để lấy token mới
+                async Task<string> GetNewToken()
+                {
+                    var userForAuthentication = new UserForAuthenticationDto
+                    {
+                        UserName = _configuration["APIService:Username"] ?? "atlab",
+                        Password = _configuration["APIService:Password"] ?? "atpro1234560"
+                    };
+
+                    using var httpClient = _httpClientFactory.CreateClient();
+                    var responseToken = await httpClient.PostAsJsonAsync($"{_addressIWebAPI}/login", userForAuthentication);
+                    if (responseToken.IsSuccessStatusCode)
+                    {
+                        var iWebAPIResponse = await responseToken.Content.ReadFromJsonAsync<IWebToken>();
+                        if (!string.IsNullOrEmpty(iWebAPIResponse?.Token))
+                        {
+                            _cache.Set("IWebAPIToken", iWebAPIResponse.Token, TimeSpan.FromHours(29)); // Lưu token, trừ 1 giờ để an toàn
+                            return iWebAPIResponse.Token;
+                        }
+                        throw new Exception("Token iWebAPI rỗng hoặc không hợp lệ.");
+                    }
+                    var errorMessage = await responseToken.Content.ReadAsStringAsync();
+                    throw new Exception($"Không thể lấy token từ iWebAPI: {responseToken.StatusCode} - {errorMessage}");
                 }
 
-                using var httpClient = _httpClientFactory.CreateClient();
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenIWebAPI);
+                // Nếu token rỗng, lấy token mới
+                if (string.IsNullOrEmpty(token))
+                {
+                    token = await GetNewToken();
+                }
 
-                var response = await httpClient.PutAsJsonAsync($"{_addressIWebAPI}", requestList);
+                // Gửi yêu cầu cập nhật dữ liệu
+                using var updateClient = _httpClientFactory.CreateClient();
+                updateClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var response = await updateClient.PutAsJsonAsync($"{_addressIWebAPI}", mutableList);
 
+                // Kiểm tra nếu token hết hạn (401 Unauthorized)
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    // Lấy token mới và thử lại
+                    token = await GetNewToken();
+                    updateClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    response = await updateClient.PutAsJsonAsync($"{_addressIWebAPI}", mutableList);
+                }
+
+                // Kiểm tra kết quả
                 if (!response.IsSuccessStatusCode)
                 {
                     var errorMessage = await response.Content.ReadAsStringAsync();
-                    throw new Exception($"Lỗi cập nhật dữ liệu: {errorMessage}");
+                    Console.WriteLine($"Lỗi cập nhật dữ liệu: {response.StatusCode} - {errorMessage}");
+                    return false; // Trả về false thay vì throw exception
                 }
+
+                return true; // Thành công
             }
             catch (Exception ex)
             {
-                // Ghi log lỗi
                 Console.WriteLine($"Lỗi trong StartResetValue: {ex.Message}");
-                throw; // Ném lại lỗi để Controller xử lý
+                return false; // Trả về false thay vì throw exception
             }
         }
 
+        public async Task<bool> StartWriteValue(IEnumerable<WcfDataForUpdateDto> requestList)
+        {
+            try
+            {
+                string input = requestList.First().ValueToWrite;
+                string[] parts = input.Split('/');
+                string result = string.Join("/", parts.Take(3));
+                string numberPart = new string(parts[1].Where(char.IsDigit).ToArray());
+                var code = new WcfDataForUpdateDto
+                {
+                    Name = $"SettingLine{requestList.First().Name}.ProductCode",
+                    ValueToWrite = numberPart
+                };
+                var BagWeightInfo = await _repository.BagWeightInfo.GetBagWeightInfoByWeightAsync(double.Parse(parts[parts.Length - 1]), trackChanges: false);
+
+                // Lấy token từ cache hoặc khởi tạo rỗng
+                string token = _cache.Get<string>("IWebAPIToken") ?? string.Empty;
+                requestList.First().ValueToWrite = result + "/100/" + BagWeightInfo.Bag1 + "/" + BagWeightInfo.Bag2 + "/" + BagWeightInfo.Bag3 + "/" + BagWeightInfo.Bag4;
+                requestList.First().Name = $"SettingLine{requestList.First().Name}.Setting";
+
+                var mutableList = requestList.ToList();
+                mutableList.Add(code);
+
+                // Hàm hỗ trợ để lấy token mới
+                async Task<string> GetNewToken()
+                {
+                    var userForAuthentication = new UserForAuthenticationDto
+                    {
+                        UserName = _configuration["APIService:Username"] ?? "atlab",
+                        Password = _configuration["APIService:Password"] ?? "atpro1234560"
+                    };
+
+                    using var httpClient = _httpClientFactory.CreateClient();
+                    var responseToken = await httpClient.PostAsJsonAsync($"{_addressIWebAPI}/login", userForAuthentication);
+                    if (responseToken.IsSuccessStatusCode)
+                    {
+                        var iWebAPIResponse = await responseToken.Content.ReadFromJsonAsync<IWebToken>();
+                        if (!string.IsNullOrEmpty(iWebAPIResponse?.Token))
+                        {
+                            _cache.Set("IWebAPIToken", iWebAPIResponse.Token, TimeSpan.FromHours(29)); // Lưu token, trừ 1 giờ để an toàn
+                            return iWebAPIResponse.Token;
+                        }
+                        throw new Exception("Token iWebAPI rỗng hoặc không hợp lệ.");
+                    }
+                    var errorMessage = await responseToken.Content.ReadAsStringAsync();
+                    throw new Exception($"Không thể lấy token từ iWebAPI: {responseToken.StatusCode} - {errorMessage}");
+                }
+
+                // Nếu token rỗng, lấy token mới
+                if (string.IsNullOrEmpty(token))
+                {
+                    token = await GetNewToken();
+                }
+
+                // Gửi yêu cầu cập nhật dữ liệu
+                using var updateClient = _httpClientFactory.CreateClient();
+                updateClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var response = await updateClient.PutAsJsonAsync($"{_addressIWebAPI}", mutableList);
+
+                // Kiểm tra nếu token hết hạn (401 Unauthorized)
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    // Lấy token mới và thử lại
+                    token = await GetNewToken();
+                    updateClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    await updateClient.PutAsJsonAsync($"{_addressIWebAPI}", mutableList);
+                    response = await updateClient.PutAsJsonAsync($"{_addressIWebAPI}", mutableList);
+                }
+
+                // Kiểm tra kết quả
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Lỗi cập nhật dữ liệu: {response.StatusCode} - {errorMessage}");
+                    return false; // Trả về false thay vì throw exception
+                }
+
+                return true; // Thành công
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi trong StartWriteValue: {ex.Message}"); // Sửa tên method trong log
+                return false; // Trả về false thay vì throw exception
+            }
+        }
     }
 }

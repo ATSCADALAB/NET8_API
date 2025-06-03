@@ -10,6 +10,7 @@ namespace Contracts
         // Lấy tất cả chi tiết đơn hàng
         Task<IEnumerable<OrderDetail>> GetAllOrderDetailsAsync(bool trackChanges);
 
+
         // Lấy chi tiết đơn hàng theo ID
         Task<OrderDetail> GetOrderDetailByIdAsync(int orderDetailId, bool trackChanges);
 

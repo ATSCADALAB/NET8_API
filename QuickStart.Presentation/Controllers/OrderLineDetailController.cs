@@ -56,12 +56,18 @@ namespace QuickStart.Presentation.Controllers
             return NoContent();
 
         }
-        [HttpGet("running-orders/{lineId}")]
+        [HttpGet("running-orders/{lineId}")] 
         public async Task<IActionResult> GetRunningOrdersByLine(int lineId)
         {
             var runningOrders = await _service.OrderLineDetailService.GetRunningOrdersByLineAsync(lineId);
             return Ok(runningOrders);
 
+        }
+        [HttpGet("grouped-by-line")]
+        public async Task<IActionResult> GetOrdersGroupedByLine()
+        {
+            var ordersGroupedByLine = await _service.OrderLineDetailService.GetOrdersGroupedByLineAsync();
+            return Ok(ordersGroupedByLine);
         }
     }
 }

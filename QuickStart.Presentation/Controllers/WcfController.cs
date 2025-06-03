@@ -76,6 +76,11 @@ namespace QuickStart.Presentation.Controllers
             await _serviceManager.WcfService.StartResetValue(request);
             return Ok();
         }
-
+        [HttpPut("write-setting")]
+        public async Task<IActionResult> WriteSetData([FromBody] IEnumerable<WcfDataForUpdateDto> request)
+        {
+            await _serviceManager.WcfService.StartWriteValue(request);
+            return Ok();
+        }
     }
 }

@@ -9,7 +9,8 @@ namespace Service.Contracts
     {
         Task<WcfDataDto[]> ReadTagsAsync(string[] tagNames);
         Task StartPollingAsync(string[] tagNames, int intervalMs); // Đọc liên tục và gửi qua SignalR
-        Task StartResetValue(IEnumerable<WcfDataForUpdateDto> requestList);
+        Task<bool> StartResetValue(IEnumerable<WcfDataForUpdateDto> requestList);
+        Task<bool> StartWriteValue(IEnumerable<WcfDataForUpdateDto> requestList);
         Task StopPollingAsync();
     }
 }

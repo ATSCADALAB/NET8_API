@@ -84,6 +84,8 @@ namespace Service
         {
             var orderDetail = await GetOrderDetailAndCheckIfItExists(orderDetailId, trackChanges);
             _mapper.Map(orderDetailForUpdate, orderDetail);
+            orderDetail.ReplacedWeight = orderDetailForUpdate.ReplacedUnits * orderDetail.ProductInformation.WeightPerUnit;
+            orderDetail.DefectiveWeight = orderDetailForUpdate.DefectiveUnits * orderDetail.ProductInformation.WeightPerUnit;
             await _repository.SaveAsync();
         }
 

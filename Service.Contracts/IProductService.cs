@@ -11,8 +11,11 @@ namespace Service.Contracts
         Task<CheckDto> GetProductByTagIDAsync(string tagId, bool trackChanges);
         Task<IEnumerable<ProductDto>> GetProductsByDistributorAsync(int distributorId, bool trackChanges);
         Task<IEnumerable<ProductDto>> GetProductsByOrderDetailAsync(int orderDetailId, bool trackChanges);
-        Task<ProductDto> CreateProductAsync(ProductForCreationDto product);
+        Task<ProductDto> CreateProductsAsync(ProductForCreationDto products);
         Task UpdateProductAsync(int productId, ProductForUpdateDto productForUpdate, bool trackChanges);
         Task DeleteProductAsync(int productId, bool trackChanges);
+        Task<List<ProductCreationResult>> CreateProductsBulkAsync(List<ProductForCreationDto> products);
+        Task<IEnumerable<ProductExportDto>> GetExportDataAsync(ProductExportQueryDto filter);
+        Task<byte[]> ExportProductReportAsync(ProductExportQueryDto filter);
     }
 }

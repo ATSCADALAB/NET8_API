@@ -20,6 +20,7 @@ namespace Repository
                 .Include(old => old.Order)
                     .ThenInclude(o => o.UpdatedBy)
                 .Include(old => old.Line)
+                .Where(old => old.EndTime == null)
                 .OrderBy(old => old.SequenceNumber)
                 .ToListAsync();
 
@@ -30,6 +31,7 @@ namespace Repository
                 .Include(old => old.Order)
                     .ThenInclude(o => o.UpdatedBy)
                 .Include(old => old.Line)
+                .Where(old => old.EndTime == null)
                 .SingleOrDefaultAsync();
 
         public async Task<IEnumerable<OrderLineDetail>> GetOrderLineDetailsByOrderIdAsync(Guid orderId, bool trackChanges) =>
@@ -40,6 +42,7 @@ namespace Repository
                     .ThenInclude(o => o.UpdatedBy)
                 .Include(old => old.Line)
                 .OrderBy(old => old.SequenceNumber)
+                        .Where(old => old.EndTime == null)
                 .ToListAsync();
 
         public async Task<IEnumerable<OrderLineDetail>> GetOrderLineDetailsByLineIdAsync(int lineId, bool trackChanges) =>

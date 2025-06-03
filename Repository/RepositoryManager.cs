@@ -1,5 +1,6 @@
 ﻿using Contracts;
 using Entities.Identity;
+using Entities.Models;
 using Microsoft.AspNetCore.Identity;
 using System;
 
@@ -24,6 +25,7 @@ namespace Repository
         private readonly Lazy<IPermissionRepository> _permissionRepository;
         private readonly Lazy<IRolePermissionRepository> _rolePermissionRepository;
         private readonly Lazy<IAuditRepository> _auditRepository;
+        private readonly Lazy<IBagWeightInfoRepository> _bagWeightInfoRepository;
 
         public RepositoryManager(RepositoryContext repositoryContext, RoleManager<UserRole> roleManager)
         {
@@ -41,7 +43,7 @@ namespace Repository
             _stockRepository = new Lazy<IStockRepository>(() => new StockRepository(repositoryContext));
             _inboundRecordRepository = new Lazy<IInboundRecordRepository>(() => new InboundRecordRepository(repositoryContext));
             _outboundRecordRepository = new Lazy<IOutboundRecordRepository>(() => new OutboundRecordRepository(repositoryContext));
-
+            _bagWeightInfoRepository = new Lazy<IBagWeightInfoRepository>(() => new BagWeightInfoRepository(repositoryContext));
             // Khởi tạo các repository cũ
             _categoryRepository = new Lazy<ICategoryRepository>(() => new CategoryRepository(repositoryContext));
             _permissionRepository = new Lazy<IPermissionRepository>(() => new PermissionRepository(repositoryContext));
@@ -66,6 +68,7 @@ namespace Repository
         public IPermissionRepository Permission => _permissionRepository.Value;
         public IRolePermissionRepository RolePermission => _rolePermissionRepository.Value;
         public IAuditRepository Audit => _auditRepository.Value;
+        public IBagWeightInfoRepository BagWeightInfo => _bagWeightInfoRepository.Value;
 
         public async Task SaveAsync() => await _repositoryContext.SaveChangesAsync();
     }

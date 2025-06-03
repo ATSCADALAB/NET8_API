@@ -15,5 +15,6 @@ namespace Service.Contracts
         Task UpdateOrderLineDetailAsync(int orderLineDetailId, OrderLineDetailForUpdateDto orderLineDetailForUpdate, bool trackChanges);
         Task DeleteOrderLineDetailAsync(int orderLineDetailId, bool trackChanges);
         Task<IEnumerable<RunningOrderDto>> GetRunningOrdersByLineAsync(int lineId);
+        Task<IEnumerable<OrderGroupedByLineDto>> GetOrdersGroupedByLineAsync();
     }
 }

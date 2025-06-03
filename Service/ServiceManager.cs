@@ -81,7 +81,7 @@ namespace Service
             _userService = new Lazy<IUserService>(() => new UserService(logger, mapper, userManager));
             _roleService = new Lazy<IRoleService>(() => new RoleService(logger, mapper, roleManager));
             _auditService = new Lazy<IAuditService>(() => new AuditService(repositoryManager, logger, mapper));
-            _wcfService = new Lazy<IWcfService>(() => new WcfService(configuration, hubContext, cache, httpClientFactory));
+            _wcfService = new Lazy<IWcfService>(() => new WcfService(configuration, hubContext, cache, httpClientFactory,repositoryManager));
         }
 
         public IDashboardService DashboardService => _dashboardService.Value;

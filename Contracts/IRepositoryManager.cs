@@ -21,6 +21,7 @@ namespace Contracts
         ICategoryRepository Category { get; }
         IPermissionRepository Permission { get; }
         IRolePermissionRepository RolePermission { get; }
+        IBagWeightInfoRepository BagWeightInfo { get; }
 
         Task SaveAsync();
     }

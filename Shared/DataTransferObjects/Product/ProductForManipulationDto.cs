@@ -8,6 +8,7 @@
         public int? OrderDetailId { get; init; } // Nullable để khớp với model
         public DateTime ShipmentDate { get; init; }
         public DateTime ManufactureDate { get; init; }
+        public string Delivery { get; set; } // Không có trong model Product, có thể bỏ nếu không cần
         public int DistributorId { get; init; }
         public int ProductInformationId { get; init; } // Thêm ProductInformationId
         public bool IsActive { get; init; } = true;

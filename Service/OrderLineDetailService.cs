@@ -75,7 +75,7 @@ namespace Service
 
         public async Task UpdateOrderLineDetailAsync(int orderLineDetailId, OrderLineDetailForUpdateDto orderLineDetailForUpdate, bool trackChanges)
         {
-            var orderLineDetail = await GetOrderLineDetailAndCheckIfItExists(orderLineDetailId, trackChanges);
+            var orderLineDetail = await GetOrderLineDetailAndCheckIfItExistsByID(orderLineDetailId, trackChanges);
             _mapper.Map(orderLineDetailForUpdate, orderLineDetail);
             await _repository.SaveAsync();
         }
@@ -85,6 +85,56 @@ namespace Service
             var orderLineDetail = await GetOrderLineDetailAndCheckIfItExists(orderLineDetailId, trackChanges);
             _repository.OrderLineDetail.DeleteOrderLineDetail(orderLineDetail);
             await _repository.SaveAsync();
+        }
+
+        public async Task<IEnumerable<OrderGroupedByLineDto>> GetOrdersGroupedByLineAsync()
+        {
+            _logger.LogInfo("Fetching orders grouped by line from stored procedure sp_GetOrdersGroupedByLine");
+
+            try
+            {
+                using (var connection = new MySqlConnection(_connectionString))
+                {
+                    await connection.OpenAsync();
+
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = "sp_GetOrdersGroupedByLine";
+                        command.CommandType = System.Data.CommandType.StoredProcedure;
+
+                        var ordersGroupedByLine = new List<OrderGroupedByLineDto>();
+                        using (var reader = await command.ExecuteReaderAsync())
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                ordersGroupedByLine.Add(new OrderGroupedByLineDto
+                                {
+                                    LineNumber = reader.GetInt32("LineNumber"),
+                                    LineName = reader.GetString("LineName"),
+                                    OrderId = reader.GetGuid("OrderId"),
+                                    OrderCode = reader.GetString("OrderCode"),
+                                    ProductName = reader.GetString("ProductName"),
+                                    RequestedUnits = reader.GetInt32("RequestedUnits"),
+                                    DistributorName = reader.GetString("DistributorName")
+                                });
+                            }
+                        }
+
+                        if (!ordersGroupedByLine.Any())
+                        {
+                            _logger.LogInfo("No orders grouped by line found.");
+                            return new List<OrderGroupedByLineDto>();
+                        }
+
+                        return ordersGroupedByLine;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error fetching orders grouped by line: {ex.Message}");
+                throw;
+            }
         }
 
         // Thêm phương thức mới để gọi stored procedure
@@ -152,6 +202,13 @@ namespace Service
         }
 
         private async Task<OrderLineDetail> GetOrderLineDetailAndCheckIfItExists(int id, bool trackChanges)
+        {
+            var orderLineDetail = await _repository.OrderLineDetail.GetOrderLineDetailByIdAsync(id, trackChanges);
+            if (orderLineDetail is null)
+                throw new OrderLineDetailNotFoundException(id);
+            return orderLineDetail;
+        }
+        private async Task<OrderLineDetail> GetOrderLineDetailAndCheckIfItExistsByID(int id, bool trackChanges)
         {
             var orderLineDetail = await _repository.OrderLineDetail.GetOrderLineDetailByIdAsync(id, trackChanges);
             if (orderLineDetail is null)

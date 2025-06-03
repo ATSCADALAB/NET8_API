@@ -207,6 +207,7 @@ namespace Service
                                 orders.Add(new OrderWithDetailsDto
                                 {
                                     Id = reader.GetGuid("Id"),
+                                    LineID = reader["LineID"] != DBNull.Value? "Line " + Convert.ToInt32(reader["LineID"]): "None",
                                     OrderCode = reader.GetString("OrderCode"),
                                     ExportDate = reader.GetDateTime("ExportDate"),
                                     VehicleNumber = reader.GetString("VehicleNumber"),

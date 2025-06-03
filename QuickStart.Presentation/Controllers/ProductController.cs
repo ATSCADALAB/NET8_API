@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using QuickStart.Presentation.ActionFilters;
 using Service.Contracts;
@@ -59,10 +60,20 @@ namespace QuickStart.Presentation.Controllers
         //[AuthorizePermission("Products", "Create")]
         public async Task<IActionResult> CreateProduct([FromBody] ProductForCreationDto product)
         {
-            var createdProduct = await _service.ProductService.CreateProductAsync(product);
+            var createdProduct = await _service.ProductService.CreateProductsAsync(product);
             return CreatedAtRoute("GetProductById", new { productId = createdProduct.Id }, createdProduct);
         }
+        [HttpPost("bulk")]
+        public async Task<IActionResult> CreateProductsBulk([FromBody] List<ProductForCreationDto> products)
+        {
+            if (products == null || !products.Any())
+            {
+                return BadRequest("Product list cannot be null or empty.");
+            }
 
+            var results = await _service.ProductService.CreateProductsBulkAsync(products);
+            return Ok(results);
+        }
         [HttpPut("{productId:int}")]
         [ServiceFilter(typeof(ValidationFilterAttribute))]
         //[AuthorizePermission("Products", "Update")]
@@ -78,6 +89,47 @@ namespace QuickStart.Presentation.Controllers
         {
             await _service.ProductService.DeleteProductAsync(productId, trackChanges: false);
             return NoContent();
+        }
+        [HttpPost("report")]
+        public async Task<IActionResult> GetExportReport([FromBody] ProductExportQueryDto filter)
+        {
+            if (filter == null)
+                return BadRequest("Filter thông tin không được null.");
+
+            var result = await _service.ProductService.GetExportDataAsync(filter);
+
+            return Ok(result ?? new List<ProductExportDto>());
+        }
+        [HttpPost("export")]
+        public async Task<IActionResult> ExportProductReportToExcel([FromBody] ProductExportQueryDto filter)
+        {
+            try
+            {
+                if (filter == null)
+                {
+                    return BadRequest("Filter thông tin không được null.");
+                }
+
+                var fileContent = await _service.ProductService.ExportProductReportAsync(filter);
+                if (fileContent == null || fileContent.Length == 0)
+                {
+                    return NoContent();
+                }
+
+                return File(
+                    fileContent,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"BaoCaoXuatSanPham_{filter.FromDate:ddMMyyyy}_{filter.ToDate:ddMMyyyy}.xlsx"
+                );
+            }
+            catch (Exception ex)
+            {
+                return Problem(
+                    detail: ex.Message,
+                    statusCode: StatusCodes.Status500InternalServerError,
+                    title: "Export Report Error"
+                );
+            }
         }
     }
 }
