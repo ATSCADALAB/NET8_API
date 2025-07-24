@@ -369,3 +369,4 @@ api.mdc
 # NLog files
 internallog.txt
 internallog*.txt
+QuickStart/wwwroot

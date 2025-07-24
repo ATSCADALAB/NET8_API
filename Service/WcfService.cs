@@ -247,8 +247,8 @@ namespace QuickStart.Service
                 string numberPart = new string(parts[1].Where(char.IsDigit).ToArray());
                 var code = new WcfDataForUpdateDto
                 {
-                    Name = $"SettingLine{requestList.First().Name}.ProductCode",
-                    ValueToWrite = numberPart
+                    Name = $"SettingLine{requestList.First().Name}.Confirm",
+                    ValueToWrite = "100"
                 };
                 var BagWeightInfo = await _repository.BagWeightInfo.GetBagWeightInfoByWeightAsync(double.Parse(parts[parts.Length - 1]), trackChanges: false);
 
@@ -299,11 +299,10 @@ namespace QuickStart.Service
                 // Kiểm tra nếu token hết hạn (401 Unauthorized)
                 if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                 {
-                    // Lấy token mới và thử lại
+                    // Lấy token mới và thử lại                                                                         
                     token = await GetNewToken();
                     updateClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
                     await updateClient.PutAsJsonAsync($"{_addressIWebAPI}", mutableList);
-                    response = await updateClient.PutAsJsonAsync($"{_addressIWebAPI}", mutableList);
                 }
 
                 // Kiểm tra kết quả
@@ -321,6 +320,6 @@ namespace QuickStart.Service
                 Console.WriteLine($"Lỗi trong StartWriteValue: {ex.Message}"); // Sửa tên method trong log
                 return false; // Trả về false thay vì throw exception
             }
-        }
+        }  
     }
 }

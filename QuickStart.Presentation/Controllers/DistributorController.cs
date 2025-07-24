@@ -165,13 +165,22 @@ namespace QuickStart.Presentation.Controllers
                                 foreach (var distributor in batch)
                                 {
                                     try
-                                    {
-                                        await _service.DistributorService.CreateDistributorAsync(distributor);
-                                        successCount++;
+                                    {   
+                                        var distributor1 = await _service.DistributorService.GetDistributorByCodeAsync(distributor.DistributorCode, trackChanges: false);
+                                        if (distributor1!=null)
+                                        {
+                                            errors.Add($"Distributor Code is exist :{distributor1.DistributorCode}");
+                                        }
+                                        else
+                                        {
+                                            await _service.DistributorService.CreateDistributorAsync(distributor);
+                                            successCount++;
+                                        }
                                     }
                                     catch (Exception ex)
                                     {
-                                        errors.Add($"Distributor Code is exist :{distributor.DistributorCode}");
+                                        await _service.DistributorService.CreateDistributorAsync(distributor);
+                                        successCount++;
                                     }
 
                                 }
@@ -196,6 +205,75 @@ namespace QuickStart.Presentation.Controllers
             catch (Exception ex)
             {
                 return BadRequest($"Error importing distributors: {ex.Message}");
+            }
+        }
+        [HttpGet("export")]
+        public async Task<IActionResult> ExportDistributors()
+        {
+            try
+            {
+                // Lấy tất cả distributors
+                var distributors = await _service.DistributorService.GetAllDistributorsAsync(trackChanges: false);
+
+                // Lấy tất cả areas để map areaId với tên khu vực
+                var areas = await _service.AreaService.GetAllAreasAsync(trackChanges: false);
+
+                using (var workbook = new XLWorkbook())
+                {
+                    var worksheet = workbook.Worksheets.Add("Distributors");
+
+                    // Tạo header
+                    worksheet.Cell(1, 1).Value = "Mã NPP";
+                    worksheet.Cell(1, 2).Value = "Tên nhà PP";
+                    worksheet.Cell(1, 3).Value = "Tên ĐT thuế GTGT";
+                    worksheet.Cell(1, 4).Value = "Địa chỉ";
+                    worksheet.Cell(1, 5).Value = "Tỉnh Thành";
+                    worksheet.Cell(1, 6).Value = "Khu Vực";
+
+                    // Format header
+                    var headerRange = worksheet.Range(1, 1, 1, 6);
+                    headerRange.Style.Font.Bold = true;
+                    headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
+                    headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                    // Điền dữ liệu
+                    int currentRow = 2;
+                    foreach (var distributor in distributors)
+                    {
+                        // Tìm tên khu vực từ areaId
+                        var area = areas.FirstOrDefault(a => a.Id == distributor.AreaId);
+
+                        worksheet.Cell(currentRow, 1).Value = distributor.DistributorCode ?? "";
+                        worksheet.Cell(currentRow, 2).Value = distributor.DistributorName ?? ""; // Tên nhà PP
+                        worksheet.Cell(currentRow, 3).Value = distributor.DistributorName ?? ""; // Tên ĐT thuế GTGT (có thể khác hoặc giống)
+                        worksheet.Cell(currentRow, 4).Value = distributor.Address ?? "";
+                        worksheet.Cell(currentRow, 5).Value = distributor.Province ?? "";
+                        worksheet.Cell(currentRow, 6).Value = area?.AreaName ?? "";
+
+                        currentRow++;
+                    }
+
+                    // Auto-fit columns
+                    worksheet.Columns().AdjustToContents();
+
+                    // Tạo file trong memory
+                    using (var stream = new MemoryStream())
+                    {
+                        workbook.SaveAs(stream);
+                        var fileBytes = stream.ToArray();
+
+                        // Tạo tên file với timestamp
+                        var fileName = $"Distributors_Export_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+
+                        return File(fileBytes,
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            fileName);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error exporting distributors: {ex.Message}");
             }
         }
     }

@@ -1,4 +1,5 @@
 ﻿using ClosedXML.Excel;
+using Entities.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -143,13 +144,36 @@ namespace QuickStart.Presentation.Controllers
                             {
                                 foreach (var product in batch)
                                 {
-                                    await _service.ProductInformationService.CreateProductInformationAsync(product);
-                                    successCount++;
+                                    try
+                                    {
+                                        var productInformation = await _service.ProductInformationService.GetProductInformationByCodeAsync(product.ProductCode, trackChanges: false);
+                                        if(productInformation.ProductCode== "MXM845")
+                                        {
+
+                                        }    
+                                        if (productInformation != null)
+                                        {
+                                            errors.Add($"Row {i + 2}: Product with code '{product.ProductCode}' already exists.");
+                                        }
+                                        else
+                                        {
+                                            await _service.ProductInformationService.CreateProductInformationAsync(product);
+                                            successCount++;
+                                        }
+
+                                    }
+                                    catch
+                                    (Exception ex)
+                                    {
+                                        await _service.ProductInformationService.CreateProductInformationAsync(product);
+                                        successCount++;
+                                    }
+                                    
                                 }
                             }
                             catch (Exception ex)
                             {
-                                errors.Add($"Batch {i / batchSize + 1}: {ex.Message} - Inner: {ex.InnerException?.Message}");
+                                errors.Add($"Batch starting at row {i + 2}: {ex.Message} - StackTrace: {ex.StackTrace}"); // Lưu lỗi cho cả lô
                             }
                         }
 
@@ -159,9 +183,6 @@ namespace QuickStart.Presentation.Controllers
                             Errors = errors
                         };
 
-                        if (errors.Count > 0)
-                            return BadRequest(result);
-
                         return Ok(result);
                     }
                 }
@@ -169,6 +190,66 @@ namespace QuickStart.Presentation.Controllers
             catch (Exception ex)
             {
                 return BadRequest($"Error importing product informations: {ex.Message} - StackTrace: {ex.StackTrace}");
+            }
+        }
+        [HttpGet("export")]
+        //[AuthorizePermission("ProductInformations", "View")]
+        public async Task<IActionResult> ExportProductInformations()
+        {
+            try
+            {
+                // Lấy tất cả product informations
+                var productInformations = await _service.ProductInformationService.GetAllProductInformationsAsync(trackChanges: false);
+
+                using (var workbook = new XLWorkbook())
+                {
+                    var worksheet = workbook.Worksheets.Add("ProductInformations");
+
+                    // Tạo header
+                    worksheet.Cell(1, 1).Value = "Mã Sản Phẩm";
+                    worksheet.Cell(1, 2).Value = "Tên Sản Phẩm";
+                    worksheet.Cell(1, 3).Value = "Đơn Vị";
+                    worksheet.Cell(1, 4).Value = "QC";
+
+                    // Format header
+                    var headerRange = worksheet.Range(1, 1, 1, 4);
+                    headerRange.Style.Font.Bold = true;
+                    headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
+                    headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                    // Điền dữ liệu
+                    int currentRow = 2;
+                    foreach (var product in productInformations)
+                    {
+                        worksheet.Cell(currentRow, 1).Value = product.ProductCode ?? "";
+                        worksheet.Cell(currentRow, 2).Value = product.ProductName ?? "";
+                        worksheet.Cell(currentRow, 3).Value = product.Unit ?? "";
+                        worksheet.Cell(currentRow, 4).Value = product.WeightPerUnit;
+
+                        currentRow++;
+                    }
+
+                    // Auto-fit columns
+                    worksheet.Columns().AdjustToContents();
+
+                    // Tạo file trong memory
+                    using (var stream = new MemoryStream())
+                    {
+                        workbook.SaveAs(stream);
+                        var fileBytes = stream.ToArray();
+
+                        // Tạo tên file với timestamp
+                        var fileName = $"ProductInformations_Export_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+
+                        return File(fileBytes,
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            fileName);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error exporting product informations: {ex.Message}");
             }
         }
     }
