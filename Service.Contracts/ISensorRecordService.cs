@@ -8,6 +8,7 @@ namespace Service.Contracts
 {
     public interface ISensorRecordService
     {
+        Task<int> ResetStatusByLineIdAsync(int lineId);
         Task<IEnumerable<SensorRecordDto>> GetAllSensorRecordsAsync(bool trackChanges);
         Task<SensorRecordDto> GetSensorRecordAsync(int sensorRecordId, bool trackChanges);
         Task<IEnumerable<SensorRecordDto>> GetSensorRecordsByOrderAsync(Guid orderId, bool trackChanges);

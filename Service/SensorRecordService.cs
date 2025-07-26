@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Contracts;
+using Entities.Exceptions.Line;
 using Entities.Exceptions.SensorRecord;
 using Entities.Models;
 using Microsoft.AspNetCore.Http;
@@ -23,7 +24,19 @@ namespace Service
             _logger = logger;
             _mapper = mapper;
         }
+        public async Task<int> ResetStatusByLineIdAsync(int lineId)
+        {
+            // Kiểm tra Line có tồn tại không
+            var line = await _repository.Line.GetLineByIdAsync(lineId, trackChanges: false);
+            if (line is null)
+                throw new LineNotFoundException(lineId);
 
+            // Reset status tất cả SensorRecords có LineId = lineId
+            var updatedCount = await _repository.SensorRecord.ResetStatusByLineIdAsync(lineId, trackChanges: true);
+            await _repository.SaveAsync();
+
+            return updatedCount;
+        }
         public async Task<IEnumerable<SensorRecordDto>> GetAllSensorRecordsAsync(bool trackChanges)
         {
             var sensorRecords = await _repository.SensorRecord.GetAllSensorRecordsAsync(trackChanges);

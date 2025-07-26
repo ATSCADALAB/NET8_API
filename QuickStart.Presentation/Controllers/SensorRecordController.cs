@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Entities.Exceptions.Line;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using QuickStart.Presentation.ActionFilters;
@@ -94,6 +95,33 @@ namespace QuickStart.Presentation.Controllers
         {
             await _service.SensorRecordService.DeleteSensorRecordAsync(sensorRecordId, trackChanges: false);
             return NoContent();
+        }
+        [HttpPut("reset-status-by-line/{lineId:int}")]
+        //[AuthorizePermission("SensorRecords", "Update")]
+        public async Task<IActionResult> ResetStatusByLine(int lineId)
+        {
+            try
+            {
+                var updatedCount = await _service.SensorRecordService.ResetStatusByLineIdAsync(lineId);
+
+                var response = new ResetStatusResponseDto
+                {
+                    LineId = lineId,
+                    UpdatedRecordsCount = updatedCount,
+                    Message = $"Đã reset status thành công cho {updatedCount} bản ghi của Line {lineId}",
+                    ResetTime = DateTime.UtcNow
+                };
+
+                return Ok(response);
+            }
+            catch (LineNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Có lỗi xảy ra khi reset status", error = ex.Message });
+            }
         }
     }
 }

@@ -12,7 +12,19 @@ namespace Repository
         public SensorRecordRepository(RepositoryContext repositoryContext) : base(repositoryContext)
         {
         }
+        public async Task<int> ResetStatusByLineIdAsync(int lineId, bool trackChanges)
+        {
+            var sensorRecords = await FindByCondition(sr => sr.LineId == lineId, trackChanges)
+                .ToListAsync();
 
+            foreach (var record in sensorRecords)
+            {
+                record.Status = 0;
+                record.UpdatedAt = DateTime.UtcNow;
+            }
+
+            return sensorRecords.Count;
+        }
         public async Task<IEnumerable<SensorRecord>> GetAllSensorRecordsAsync(bool trackChanges) =>
             await FindAll(trackChanges)
                 .Where(sr=>sr.Status==1)

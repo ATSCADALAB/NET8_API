@@ -24,4 +24,11 @@ namespace Shared.DataTransferObjects.SensorRecord
         public OrderDetailDto OrderDetail { get; init; }
         public LineDto Line { get; init; }
     }
+    public record ResetStatusResponseDto
+    {
+        public int LineId { get; init; }
+        public int UpdatedRecordsCount { get; init; }
+        public string Message { get; init; }
+        public DateTime ResetTime { get; init; }
+    }
 }

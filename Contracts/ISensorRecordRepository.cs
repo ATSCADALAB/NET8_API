@@ -33,5 +33,6 @@ namespace Contracts
 
         // Xóa bản ghi cảm biến
         void DeleteSensorRecord(SensorRecord sensorRecord);
+        Task<int> ResetStatusByLineIdAsync(int lineId, bool trackChanges);
     }
 }
