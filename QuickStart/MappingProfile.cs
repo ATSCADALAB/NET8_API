@@ -5,6 +5,7 @@ using Shared.DataTransferObjects;
 using Shared.DataTransferObjects.Area;
 using Shared.DataTransferObjects.AuditLog;
 using Shared.DataTransferObjects.Authentication;
+using Shared.DataTransferObjects.BagWeightInfo;
 using Shared.DataTransferObjects.Category;
 using Shared.DataTransferObjects.Dashboard;
 using Shared.DataTransferObjects.Distributor;
@@ -274,8 +275,10 @@ namespace QuickStart
                 .ForMember(dest => dest.Line, opt => opt.Ignore());
 
             // Ánh xạ cho Stock
-            
-           
+            CreateMap<BagWeightInfo, BagWeightInfoDto>();
+            CreateMap<BagWeightInfoForCreationDto, BagWeightInfo>();
+            CreateMap<BagWeightInfoForUpdateDto, BagWeightInfo>();
+
             //CreateMap<OutboundRecordForCreationDto, OutboundRecord>();
             CreateMap<ProductInformation, ProductInformationDto>();
             CreateMap<Stock, StockDto>();

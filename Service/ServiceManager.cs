@@ -43,6 +43,7 @@ namespace Service
         private readonly Lazy<IRoleService> _roleService;
         private readonly Lazy<IAuditService> _auditService;
         private readonly Lazy<IWcfService> _wcfService;
+        private readonly Lazy<IBagWeightInfoService> _bagWeightInfoService;
 
 
         public ServiceManager(
@@ -82,6 +83,7 @@ namespace Service
             _roleService = new Lazy<IRoleService>(() => new RoleService(logger, mapper, roleManager));
             _auditService = new Lazy<IAuditService>(() => new AuditService(repositoryManager, logger, mapper));
             _wcfService = new Lazy<IWcfService>(() => new WcfService(configuration, hubContext, cache, httpClientFactory,repositoryManager));
+            _bagWeightInfoService = new Lazy<IBagWeightInfoService>(() => new BagWeightInfoService(repositoryManager, logger, mapper));
         }
 
         public IDashboardService DashboardService => _dashboardService.Value;
@@ -108,5 +110,6 @@ namespace Service
         public IRoleService RoleService => _roleService.Value;
         public IAuditService AuditService => _auditService.Value;
         public IWcfService WcfService => _wcfService.Value;
+        public IBagWeightInfoService BagWeightInfoService => _bagWeightInfoService.Value;
     }
 }

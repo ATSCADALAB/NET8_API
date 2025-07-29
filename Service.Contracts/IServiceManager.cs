@@ -26,6 +26,7 @@
         IRoleService RoleService { get; }
         IAuditService AuditService { get; }
         IWcfService WcfService { get; }
-        
+        IBagWeightInfoService BagWeightInfoService { get; }
+
     }
 }

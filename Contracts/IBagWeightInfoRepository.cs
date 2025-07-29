@@ -7,12 +7,10 @@ namespace Contracts
     public interface IBagWeightInfoRepository
     {
         Task<IEnumerable<BagWeightInfo>> GetAllBagWeightInfosAsync(bool trackChanges);
+        Task<BagWeightInfo> GetBagWeightInfoAsync(int id, bool trackChanges);
         Task<BagWeightInfo> GetBagWeightInfoByWeightAsync(double weight, bool trackChanges);
-
-        void CreateBagWeightInfo(BagWeightInfo BagWeightInfo);
-
-        void UpdateBagWeightInfo(BagWeightInfo BagWeightInfo);
-
-        void DeleteBagWeightInfo(BagWeightInfo BagWeightInfo);
+        void CreateBagWeightInfo(BagWeightInfo bagWeightInfo);
+        void UpdateBagWeightInfo(BagWeightInfo bagWeightInfo);
+        void DeleteBagWeightInfo(BagWeightInfo bagWeightInfo);
     }
 }

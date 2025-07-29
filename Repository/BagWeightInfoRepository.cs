@@ -14,17 +14,21 @@ namespace Repository
 
         public async Task<IEnumerable<BagWeightInfo>> GetAllBagWeightInfosAsync(bool trackChanges) =>
             await FindAll(trackChanges)
+                .OrderBy(b => b.Weight)
                 .ToListAsync();
 
-        public async Task<BagWeightInfo> GetBagWeightInfoByWeightAsync(double weight, bool trackChanges) =>
-            await FindByCondition(a => a.Weight == weight, trackChanges)
+        public async Task<BagWeightInfo> GetBagWeightInfoAsync(int id, bool trackChanges) =>
+            await FindByCondition(b => b.Id.Equals(id), trackChanges)
                 .SingleOrDefaultAsync();
 
+        public async Task<BagWeightInfo> GetBagWeightInfoByWeightAsync(double weight, bool trackChanges) =>
+            await FindByCondition(b => b.Weight == weight, trackChanges)
+                .SingleOrDefaultAsync();
 
-        public void CreateBagWeightInfo(BagWeightInfo BagWeightInfo) => Create(BagWeightInfo);
+        public void CreateBagWeightInfo(BagWeightInfo bagWeightInfo) => Create(bagWeightInfo);
 
-        public void UpdateBagWeightInfo(BagWeightInfo BagWeightInfo) => Update(BagWeightInfo);
+        public void UpdateBagWeightInfo(BagWeightInfo bagWeightInfo) => Update(bagWeightInfo);
 
-        public void DeleteBagWeightInfo(BagWeightInfo BagWeightInfo) => Delete(BagWeightInfo);
+        public void DeleteBagWeightInfo(BagWeightInfo bagWeightInfo) => Delete(bagWeightInfo);
     }
 }
