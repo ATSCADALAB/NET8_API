@@ -3,6 +3,7 @@ using Entities.Identity;
 using Entities.Models;
 using Microsoft.AspNetCore.Identity;
 using System;
+using System.Threading.Tasks;
 
 namespace Repository
 {
@@ -71,5 +72,7 @@ namespace Repository
         public IBagWeightInfoRepository BagWeightInfo => _bagWeightInfoRepository.Value;
 
         public async Task SaveAsync() => await _repositoryContext.SaveChangesAsync();
+        
+        public int Save() => _repositoryContext.SaveChanges();
     }
 }

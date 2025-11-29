@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using ClosedXML.Excel;
 using Contracts;
+using EmailService;
 using Entities.Exceptions.Order;
 using Entities.Models;
 using Microsoft.AspNetCore.Http;
@@ -11,6 +12,8 @@ using Shared.DataTransferObjects.Order;
 using Shared.DataTransferObjects.OrderDetail;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Service
@@ -330,10 +333,61 @@ namespace Service
         public async Task UpdateOrderAsync(Guid orderId, OrderForUpdateDto orderForUpdate, IHttpContextAccessor httpContextAccessor, bool trackChanges)
         {
             var order = await GetOrderAndCheckIfItExists(orderId, trackChanges);
+            
+            // Check if order status is being changed to completed (status = 2)
+            bool isBeingCompleted = order.Status != 2 && orderForUpdate.Status == 2;
+            
             order.UpdatedAt = DateTime.Now;
             order.SetUpdatedBy(httpContextAccessor);
             _mapper.Map(orderForUpdate, order);
             await _repository.SaveAsync();
+            
+            // Log completion data if order is being completed
+            if (isBeingCompleted)
+            {
+                await LogOrderCompletionDataAsync(orderId, httpContextAccessor);
+            }
+        }
+
+        /// <summary>
+        /// Logs order completion data including who completed it, quantities, damaged packages, etc.
+        /// </summary>
+        private async Task LogOrderCompletionDataAsync(Guid orderId, IHttpContextAccessor httpContextAccessor)
+        {
+            try
+            {
+                // Get order details
+                var order = await _repository.Order.GetOrderByIdAsync(orderId, false);
+                if (order == null) return;
+                
+                // Get order details for quantity information
+                var orderDetails = await _repository.OrderDetail.GetOrderDetailsByOrderIdAsync(orderId, false);
+                
+                // Get sensor records for actual quantities and damaged packages
+                var sensorRecords = await _repository.SensorRecord.GetSensorRecordsByOrderIdAsync(orderId, false);
+                
+                // Calculate completion data
+                int totalRequestedUnits = orderDetails?.Sum(od => od.RequestedUnits) ?? 0;
+                int totalActualUnits = sensorRecords?.Sum(sr => sr.SensorUnits) ?? 0;
+                decimal totalActualWeight = sensorRecords?.Sum(sr => sr.SensorWeight) ?? 0m;
+                int damagedPackages = sensorRecords?.Count(sr => sr.Status == 3) ?? 0; // Assuming status 3 means damaged
+                
+                // Get user information
+                var user = httpContextAccessor?.HttpContext?.User?.Identity?.Name ?? "Unknown";
+                
+                // Get distributor name
+                var distributorName = order.Distributor?.DistributorName ?? "Unknown";
+                
+                // Log the completion data with names instead of IDs
+                _logger.LogInfo($"ORDER COMPLETED - OrderId: {orderId}, OrderCode: {order.OrderCode}, " +
+                               $"CompletedBy: {user}, RequestedUnits: {totalRequestedUnits}, ActualUnits: {totalActualUnits}, " +
+                               $"ActualWeight: {totalActualWeight}kg, DamagedPackages: {damagedPackages}, " +
+                               $"Vehicle: {order.VehicleNumber}, Distributor: {distributorName}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error logging order completion data for OrderId {orderId}: {ex.Message}");
+            }
         }
 
         public async Task DeleteOrderAsync(Guid orderId, bool trackChanges)

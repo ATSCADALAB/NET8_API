@@ -10,6 +10,7 @@ namespace Shared.DataTransferObjects.Product
     {
         public string TagID { get; set; }
         public string DistributorName { get; set; }
+        public string DistributorCode { get; set; }
         public string ProductName { get; set; }
         public string ProductCode { get; set; }
         public DateTime ShipmentDate { get; set; }

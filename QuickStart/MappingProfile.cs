@@ -275,6 +275,7 @@ namespace QuickStart
                 .ForMember(dest => dest.Line, opt => opt.Ignore());
 
             // Ánh xạ cho Stock
+            CreateMap<BagWeightInfoDto, BagWeightInfo>();
             CreateMap<BagWeightInfo, BagWeightInfoDto>();
             CreateMap<BagWeightInfoForCreationDto, BagWeightInfo>();
             CreateMap<BagWeightInfoForUpdateDto, BagWeightInfo>();

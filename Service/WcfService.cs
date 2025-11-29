@@ -250,7 +250,7 @@ namespace QuickStart.Service
                     Name = $"SettingLine{requestList.First().Name}.Confirm",
                     ValueToWrite = "100"
                 };
-                var BagWeightInfo = await _repository.BagWeightInfo.GetBagWeightInfoByWeightAsync(double.Parse(parts[parts.Length - 1]), trackChanges: false);
+                var BagWeightInfo = await _repository.BagWeightInfo.GetBagWeightInfoByWeightAsync(double.Parse(parts[parts.Length - 1]), trackChanges: false,int.Parse(requestList.First().Name));
 
                 // Lấy token từ cache hoặc khởi tạo rỗng
                 string token = _cache.Get<string>("IWebAPIToken") ?? string.Empty;

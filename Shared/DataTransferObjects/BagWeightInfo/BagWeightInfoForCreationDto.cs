@@ -23,5 +23,6 @@ namespace Shared.DataTransferObjects.BagWeightInfo
         [Required(ErrorMessage = "Bag4 is required")]
         [Range(0, int.MaxValue, ErrorMessage = "Bag4 must be non-negative")]
         public int Bag4 { get; init; }
+        public int LineID { get; init; }
     }
 }

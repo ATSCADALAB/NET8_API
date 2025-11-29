@@ -10,6 +10,7 @@ using Repository;
 using Service.Contracts;
 using Shared.DataTransferObjects.Product;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
@@ -22,6 +23,9 @@ namespace Service
         private readonly ILoggerManager _logger;
         private readonly IMapper _mapper;
         private readonly string _connectionString;
+        private static readonly ConcurrentDictionary<string, object> _locks = new ConcurrentDictionary<string, object>();
+        private static readonly SemaphoreSlim _semaphore = new SemaphoreSlim(3, 3); // Giảm từ 5 xuống 3 để giảm tải
+
         public ProductService(IRepositoryManager repository, ILoggerManager logger, IMapper mapper, IConfiguration configuration)
         {
             _repository = repository;
@@ -32,62 +36,102 @@ namespace Service
         public async Task<List<ProductCreationResult>> CreateProductsBulkAsync(List<ProductForCreationDto> products)
         {
             if (products == null || !products.Any())
-                throw new ArgumentNullException(nameof(products), "Product list cannot be null or empty.");
-
-            var results = new List<ProductCreationResult>();
-            var tagIds = products.Select(p => p.TagID).ToHashSet().ToList();
-
-            // Kiểm tra trùng TagID hàng loạt
-            var existingTagIds = await _repository.Product.GetExistingTagIdsAsync(tagIds);
-            var duplicateTagIds = existingTagIds.ToHashSet();
-
-            foreach (var product in products)
             {
-                if (duplicateTagIds.Contains(product.TagID))
-                {
-                    results.Add(new ProductCreationResult
-                    {
-                        TagID = product.TagID,
-                        IsSuccess = false,
-                        ErrorMessage = $"TagID {product.TagID} already exists."
-                    });
-                    continue;
-                }
-
-                try
-                {
-                    var productEntity = _mapper.Map<Product>(product);
-                    _repository.Product.CreateProduct(productEntity);
-                    await _repository.SaveAsync();
-
-                    results.Add(new ProductCreationResult
-                    {
-                        TagID = product.TagID,
-                        IsSuccess = true,
-                        ProductId = productEntity.Id
-                    });
-                }
-                catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("unique") ?? false)
-                {
-                    results.Add(new ProductCreationResult
-                    {
-                        TagID = product.TagID,
-                        IsSuccess = false,
-                        ErrorMessage = $"TagID {product.TagID} already exists (race condition)."
-                    });
-                }
-                catch (Exception ex)
-                {
-                    results.Add(new ProductCreationResult
-                    {
-                        TagID = product.TagID,
-                        IsSuccess = false,
-                        ErrorMessage = ex.Message
-                    });
-                }
+                _logger.LogError("Product list is null or empty");
+                throw new ArgumentNullException(nameof(products), "Product list cannot be null or empty.");
             }
 
-            return results;
+            _logger.LogInfo($"Starting bulk import of {products.Count} products");
+            
+            // Acquire semaphore to limit concurrent requests
+            await _semaphore.WaitAsync();
+            try
+            {
+                var results = new List<ProductCreationResult>();
+                
+                // Log thông tin về số lượng sản phẩm
+                _logger.LogInfo($"Processing {products.Count} products with {products.Select(p => p.TagID).Distinct().Count()} unique TagIDs");
+                
+                // Chỉ lấy các TagID duy nhất để giảm số lượng kiểm tra
+                var uniqueTagIds = products.Select(p => p.TagID).Distinct().ToList();
+
+                // Kiểm tra trùng TagID hàng loạt - chỉ với các TagID duy nhất
+                _logger.LogInfo($"Checking for duplicate TagIDs in database");
+                var existingTagIds = await _repository.Product.GetExistingTagIdsAsync(uniqueTagIds);
+                var duplicateTagIds = existingTagIds.ToHashSet();
+                
+                _logger.LogInfo($"Found {duplicateTagIds.Count} duplicate TagIDs out of {uniqueTagIds.Count} unique TagIDs");
+
+                foreach (var product in products)
+                {
+                    if (duplicateTagIds.Contains(product.TagID))
+                    {
+                        _logger.LogError($"TagID {product.TagID} already exists, skipping");
+                        results.Add(new ProductCreationResult
+                        {
+                            TagID = product.TagID,
+                            IsSuccess = false,
+                            ErrorMessage = $"TagID {product.TagID} already exists."
+                        });
+                        continue;
+                    }
+
+                    // Sử dụng lock để tránh race condition khi tạo sản phẩm với cùng TagID
+                    var lockObject = _locks.GetOrAdd(product.TagID, new object());
+                    lock (lockObject)
+                    {
+                        try
+                        {
+                            _logger.LogInfo($"Creating product with TagID: {product.TagID}");
+                            var productEntity = _mapper.Map<Product>(product);
+                            _repository.Product.CreateProduct(productEntity);
+                            var saveResult = _repository.Save(); // Sử dụng Save() thay vì SaveAsync() để đảm bảo atomic
+                            _logger.LogInfo($"Successfully saved product with TagID: {product.TagID}, Save result: {saveResult}");
+
+                            results.Add(new ProductCreationResult
+                            {
+                                TagID = product.TagID,
+                                IsSuccess = true,
+                                ProductId = productEntity.Id
+                            });
+                        }
+                        catch (DbUpdateException ex)
+                        {
+                            // Log chi tiết lỗi để dễ debug
+                            _logger.LogError($"Database error creating product with TagID {product.TagID}: {ex.InnerException?.Message ?? ex.Message}");
+                            _logger.LogError($"Stack trace: {ex.StackTrace}");
+                            
+                            results.Add(new ProductCreationResult
+                            {
+                                TagID = product.TagID,
+                                IsSuccess = false,
+                                ErrorMessage = $"Database error: {ex.InnerException?.Message ?? ex.Message}"
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError($"Unexpected error creating product with TagID {product.TagID}: {ex.Message}");
+                            _logger.LogError($"Stack trace: {ex.StackTrace}");
+                            
+                            results.Add(new ProductCreationResult
+                            {
+                                TagID = product.TagID,
+                                IsSuccess = false,
+                                ErrorMessage = $"Unexpected error: {ex.Message}"
+                            });
+                        }
+                    }
+                }
+                
+                _logger.LogInfo($"Bulk import completed. Success: {results.Count(r => r.IsSuccess)}, Failed: {results.Count(r => !r.IsSuccess)}");
+
+                return results;
+            }
+            finally
+            {
+                _semaphore.Release();
+                _logger.LogInfo("Released semaphore for bulk import");
+            }
         }
         public async Task<IEnumerable<ProductDto>> GetAllProductsAsync(bool trackChanges)
         {
@@ -244,6 +288,7 @@ namespace Service
                     {
                         TagID = reader["TagID"].ToString(),
                         DistributorName = reader["DistributorName"].ToString(),
+                        DistributorCode = reader["DistributorCode"].ToString(),
                         ProductName = reader["ProductName"].ToString(),
                         ProductCode = reader["ProductCode"].ToString(),
                         ShipmentDate = Convert.ToDateTime(reader["ShipmentDate"]),
@@ -287,14 +332,15 @@ namespace Service
                     {
                         worksheet.Cell(currentRow, 1).Value = item.TagID;
                         worksheet.Cell(currentRow, 2).Value = item.DistributorName;
+                        worksheet.Cell(currentRow, 3).Value = item.DistributorCode;
                         worksheet.Cell(currentRow, 4).Value = item.ProductName;
-                        worksheet.Cell(currentRow, 3).Value = item.ProductCode;
-                        worksheet.Cell(currentRow, 5).Value = item.ShipmentDate.ToString("dd/MM/yyyy");
+                        worksheet.Cell(currentRow, 5).Value = item.ProductCode;
+                        worksheet.Cell(currentRow, 6).Value = item.ShipmentDate.ToString("dd/MM/yyyy");
 
-                        var range = worksheet.Range(currentRow, 1, currentRow, 5);
+                        var range = worksheet.Range(currentRow, 1, currentRow, 6);
                         range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
                         range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-                        worksheet.Range(currentRow, 1, currentRow, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+                        worksheet.Range(currentRow, 1, currentRow, 6).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
 
                         currentRow++;
                     }

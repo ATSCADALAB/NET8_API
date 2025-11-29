@@ -20,8 +20,12 @@ namespace Contracts
 
         Task<IEnumerable<Product>> GetProductsByDistributorIdAsync(int distributorId, bool trackChanges);
         Task<List<string>> GetExistingTagIdsAsync(List<string> tagIds);
+        
         // Tạo sản phẩm mới
         void CreateProduct(Product product);
+        
+        // Tạo nhiều sản phẩm cùng lúc
+        Task CreateProductsBulkAsync(List<Product> products);
 
         // Cập nhật thông tin sản phẩm
         void UpdateProduct(Product product);

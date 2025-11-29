@@ -8,7 +8,7 @@ namespace Contracts
     {
         Task<IEnumerable<BagWeightInfo>> GetAllBagWeightInfosAsync(bool trackChanges);
         Task<BagWeightInfo> GetBagWeightInfoAsync(int id, bool trackChanges);
-        Task<BagWeightInfo> GetBagWeightInfoByWeightAsync(double weight, bool trackChanges);
+        Task<BagWeightInfo> GetBagWeightInfoByWeightAsync(double weight, bool trackChanges,int line);
         void CreateBagWeightInfo(BagWeightInfo bagWeightInfo);
         void UpdateBagWeightInfo(BagWeightInfo bagWeightInfo);
         void DeleteBagWeightInfo(BagWeightInfo bagWeightInfo);

@@ -25,5 +25,7 @@ namespace Entities.Models
 
         [Required]
         public int Bag4 { get; set; }
+        [Required]
+        public int LineID { get; set; }
     }
 }

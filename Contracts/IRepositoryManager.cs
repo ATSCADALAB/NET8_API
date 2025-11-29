@@ -24,5 +24,6 @@ namespace Contracts
         IBagWeightInfoRepository BagWeightInfo { get; }
 
         Task SaveAsync();
+        int Save();
     }
 }

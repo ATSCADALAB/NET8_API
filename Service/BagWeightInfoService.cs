@@ -36,9 +36,9 @@ namespace Service
             return bagWeightInfoDto;
         }
 
-        public async Task<BagWeightInfoDto> GetBagWeightInfoByWeightAsync(double weight, bool trackChanges)
+        public async Task<BagWeightInfoDto> GetBagWeightInfoByWeightAsync(double weight, bool trackChanges , int lineID)
         {
-            var bagWeightInfo = await _repository.BagWeightInfo.GetBagWeightInfoByWeightAsync(weight, trackChanges);
+            var bagWeightInfo = await _repository.BagWeightInfo.GetBagWeightInfoByWeightAsync(weight, trackChanges, lineID);
             if (bagWeightInfo == null)
                 throw new StockNotFoundException(1);
 
@@ -49,7 +49,7 @@ namespace Service
         public async Task<BagWeightInfoDto> CreateBagWeightInfoAsync(BagWeightInfoForCreationDto bagWeightInfo)
         {
             // Check if weight already exists
-            var existingBagWeightInfo = await _repository.BagWeightInfo.GetBagWeightInfoByWeightAsync(bagWeightInfo.Weight, trackChanges: false);
+            var existingBagWeightInfo = await _repository.BagWeightInfo.GetBagWeightInfoByWeightAsync(bagWeightInfo.Weight, trackChanges: false, bagWeightInfo.LineID);
             if (existingBagWeightInfo != null)
                 throw new StockNotFoundException(1);
 
@@ -61,12 +61,12 @@ namespace Service
             return bagWeightInfoToReturn;
         }
 
-        public async Task UpdateBagWeightInfoAsync(int bagWeightInfoId, BagWeightInfoForUpdateDto bagWeightInfoForUpdate, bool trackChanges)
+        public async Task UpdateBagWeightInfoAsync(int bagWeightInfoId, BagWeightInfoForUpdateDto bagWeightInfoForUpdate, bool trackChanges, int LineID)
         {
             var bagWeightInfo = await GetBagWeightInfoAndCheckIfItExists(bagWeightInfoId, trackChanges);
 
             // Check if the new weight already exists in another record
-            var existingBagWeightInfo = await _repository.BagWeightInfo.GetBagWeightInfoByWeightAsync(bagWeightInfoForUpdate.Weight, trackChanges: false);
+            var existingBagWeightInfo = await _repository.BagWeightInfo.GetBagWeightInfoByWeightAsync(bagWeightInfoForUpdate.Weight, trackChanges: false, LineID);
             if (existingBagWeightInfo != null && existingBagWeightInfo.Id != bagWeightInfoId)
                 throw new StockNotFoundException(1);
 

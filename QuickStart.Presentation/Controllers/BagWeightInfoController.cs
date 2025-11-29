@@ -34,7 +34,7 @@ namespace QuickStart.Presentation.Controllers
         //[AuthorizePermission("BagWeightInfos", "View")]
         public async Task<IActionResult> GetBagWeightInfoByWeight(double weight)
         {
-            var bagWeightInfo = await _service.BagWeightInfoService.GetBagWeightInfoByWeightAsync(weight, trackChanges: false);
+            var bagWeightInfo = await _service.BagWeightInfoService.GetBagWeightInfoByWeightAsync(weight, trackChanges: false,1);
             return Ok(bagWeightInfo);
         }
 
@@ -52,7 +52,7 @@ namespace QuickStart.Presentation.Controllers
         //[AuthorizePermission("BagWeightInfos", "Update")]
         public async Task<IActionResult> UpdateBagWeightInfo(int bagWeightInfoId, [FromBody] BagWeightInfoForUpdateDto bagWeightInfoForUpdate)
         {
-            await _service.BagWeightInfoService.UpdateBagWeightInfoAsync(bagWeightInfoId, bagWeightInfoForUpdate, trackChanges: true);
+            await _service.BagWeightInfoService.UpdateBagWeightInfoAsync(bagWeightInfoId, bagWeightInfoForUpdate, trackChanges: true, bagWeightInfoForUpdate.LineID);
             return NoContent();
         }
 

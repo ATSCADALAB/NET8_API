@@ -21,6 +21,11 @@ namespace Repository
         {
             base.OnModelCreating(modelBuilder);
 
+            // Thêm unique index cho TagID trong bảng Products
+            modelBuilder.Entity<Product>()
+                .HasIndex(p => p.TagID)
+                .IsUnique();
+
             // Cấu hình các phần phân quyền người dùng
             modelBuilder.Entity<RolePermission>()
                 .HasOne(rp => rp.Role)

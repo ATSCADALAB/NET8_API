@@ -11,6 +11,7 @@ namespace Repository
         public ProductRepository(RepositoryContext repositoryContext) : base(repositoryContext)
         {
         }
+        
         public async Task<List<string>> GetExistingTagIdsAsync(List<string> tagIds)
         {
             return await FindAll(false)
@@ -18,6 +19,22 @@ namespace Repository
                 .Select(p => p.TagID)
                 .ToListAsync();
         }
+        
+        public async Task CreateProductsBulkAsync(List<Product> products)
+        {
+            try
+            {
+                await RepositoryContext.AddRangeAsync(products);
+                await RepositoryContext.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                // Log chi tiết lỗi để dễ debug
+                var innerException = ex.InnerException?.Message ?? ex.Message;
+                throw new Exception($"Error occurred while saving products: {innerException}", ex);
+            }
+        }
+        
         public async Task<IEnumerable<Product>> GetAllProductsAsync(bool trackChanges) =>
             await FindAll(trackChanges)
                 .OrderBy(p => p.TagID)

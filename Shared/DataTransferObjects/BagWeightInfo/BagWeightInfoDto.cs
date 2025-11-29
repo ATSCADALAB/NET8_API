@@ -10,5 +10,6 @@ namespace Shared.DataTransferObjects.BagWeightInfo
         public int Bag2 { get; init; }
         public int Bag3 { get; init; }
         public int Bag4 { get; init; }
+        public int LineID { get; init; }
     }
 }

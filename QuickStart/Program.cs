@@ -54,7 +54,7 @@ builder.Services.AddScoped<AuthorizePermissionAttribute>(provider =>
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 
 //Đăng ký Background Service cho WCF Polling
-//builder.Services.AddHostedService<WcfPollingService>();
+builder.Services.AddHostedService<WcfPollingService>();
 
 builder.Services.AddControllers()
     .AddApplicationPart(typeof(QuickStart.Presentation.AssemblyReference).Assembly);

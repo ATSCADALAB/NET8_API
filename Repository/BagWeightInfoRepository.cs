@@ -21,8 +21,8 @@ namespace Repository
             await FindByCondition(b => b.Id.Equals(id), trackChanges)
                 .SingleOrDefaultAsync();
 
-        public async Task<BagWeightInfo> GetBagWeightInfoByWeightAsync(double weight, bool trackChanges) =>
-            await FindByCondition(b => b.Weight == weight, trackChanges)
+        public async Task<BagWeightInfo> GetBagWeightInfoByWeightAsync(double weight, bool trackChanges, int lineID) =>
+            await FindByCondition(b => b.Weight == weight&&b.LineID==lineID, trackChanges)
                 .SingleOrDefaultAsync();
 
         public void CreateBagWeightInfo(BagWeightInfo bagWeightInfo) => Create(bagWeightInfo);
